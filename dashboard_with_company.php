@@ -1784,7 +1784,7 @@ if(count($variables) == 3) {
                         echo "INNNNNNNNNNNN";
                         $queryFillingInventor = "INSERT IGNORE INTO `db_uspto`.`temp_application_inventor_count` (appno_doc_num, counter, company_id)  SELECT appno_doc_num, inventor_count, ".$companyID." FROM ( SELECT inventor.appno_doc_num, COUNT(DISTINCT inventor.name) AS inventor_count 
                         FROM db_patent_application_bibliographic.inventor AS inventor WHERE inventor.appno_doc_num IN (".implode(',', $clientOwnedAssets).") GROUP BY inventor.appno_doc_num UNION SELECT inventor.appno_doc_num, COUNT(DISTINCT inventor.name) AS inventor_count FROM db_patent_grant_bibliographic.inventor AS inventor WHERE inventor.appno_doc_num IN (".implode(',', $clientOwnedAssets).") GROUP BY inventor.appno_doc_num) AS temp1";
-                        echo $queryFillingInventor;
+                        
                         $con->query($queryFillingInventor); 
 
                         $queryAssignmentEmployee = "INSERT IGNORE INTO `db_uspto`.`temp_application_employee_count` (appno_doc_num, counter, company_id) Select appno_doc_num, COUNT(DISTINCT name) AS employee_count, ".$companyID." FROM ( Select doc.appno_doc_num, IF(r.representative_name <> '', r.representative_name, aaa.name) AS name FROM db_uspto.documentid AS doc INNER JOIN db_uspto.assignor AS aor ON aor.rf_id = doc.rf_id INNER JOIN db_uspto.assignor_and_assignee AS aaa ON aaa.assignor_and_assignee_id = aor.assignor_and_assignee_id LEFT JOIN db_uspto.representative AS r ON r.representative_id = aaa.representative_id LEFT JOIN db_uspto.representative_assignment_conveyance AS rac ON rac.rf_id = aor.rf_id Where doc.appno_doc_num IN (".implode(',', $clientOwnedAssets).") AND (rac.convey_ty = 'employee' OR (rac.convey_ty = 'assignment' AND rac.employer_assign = 1) OR (rac.convey_ty = 'correct' AND rac.employer_assign = 1))) AS temp GROUP BY appno_doc_num";
@@ -2366,6 +2366,121 @@ if(count($variables) == 3) {
                     echo $queryDeflatedCollateral;
                     $con->query($queryDeflatedCollateral);  
 
+
+                     /**
+                     * Underpaid:  (1) = Acquired (base) + Invented (base)    (2) for each of the assets in (1) check against the payments list, and identify those that had a small entity maintenance fee. Create a list of assets and their small entity maintenance fee payment date. I.e. if an asset had three small entity maintenance fee payments, on the list there will be 3 records for that patent. (3) to each asset in (2) attach a Purchase Date (= the date of an OTA in which the Company is assignee), and a Sale Date (=the date of an OTA in which the Company is assignor). If there was no Purchase Date or Sale Date - these values should be set to 0.  (4) From the assets in (3) collect those with Purchase Date < Payment Date < Sale Date.  
+                     *                      
+                     */
+                    $type = 27;
+                    $calculatedAssetsForUnPaidDue = array_unique(array_merge($originalApplicantAssets, $originalList));
+                    $inList = implode(',', $calculatedAssetsForUnPaidDue);
+
+                    $paymentCodes = implode(',', [
+                        "M1551", "M1552", "M1553", "M1554", "M1555", "M1556",
+                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556",
+                        "M3551", "M3552", "M3553", "M3554", "M3555", "M3556"
+                    ]);
+                    
+                    if(!empty($companyAssignorAndAssigneeIDs)) {
+                        // Optimized single query approach - get all data at once using JOINs
+                        $queryUnderpaid = "
+                            SELECT 
+                                mf.appno_doc_num,
+                                date_format(mf.event_date, '%Y-%m-%d') AS payment_date,
+                                mf.event_code,
+                                purchase.exec_dt AS purchase_date,
+                                sale.exec_dt AS sale_date
+                            FROM db_patent_maintainence_fee.event_maintainence_fees AS mf 
+                        INNER JOIN db_uspto.documentid AS doc 
+                            ON doc.appno_doc_num = mf.appno_doc_num
+                            LEFT JOIN (
+                                SELECT assee.rf_id, MIN(assor.exec_dt) AS exec_dt
+                                FROM db_uspto.assignee AS assee
+                                INNER JOIN db_uspto.assignor AS assor ON assor.rf_id = assee.rf_id
+                                WHERE assee.assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
+                                AND assor.exec_dt IS NOT NULL 
+                                AND assor.exec_dt != '0000-00-00'
+                                GROUP BY assee.rf_id
+                            ) AS purchase ON purchase.rf_id = doc.rf_id
+                            LEFT JOIN (
+                                SELECT rf_id, MIN(CASE WHEN exec_dt IS NOT NULL AND exec_dt != '0000-00-00' THEN exec_dt ELSE NULL END) AS exec_dt
+                                FROM db_uspto.assignor
+                                WHERE assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
+                                GROUP BY rf_id
+                            ) AS sale ON sale.rf_id = doc.rf_id
+                            WHERE CONVERT(mf.appno_doc_num USING latin1) COLLATE latin1_swedish_ci IN (".$inList.")
+                            AND mf.event_code IN (".$paymentCodes.") 
+                            AND mf.event_date IS NOT NULL 
+                            AND (
+                                -- Case 1: Company bought the patent (has purchase date)
+                                (purchase.exec_dt IS NOT NULL AND purchase.exec_dt != '0000-00-00' 
+                                    AND purchase.exec_dt < date_format(mf.event_date, '%Y-%m-%d')
+                                    AND (
+                                        -- If sold: payment must be before sale
+                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                        -- If not sold: no sale date constraint
+                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
+                                    )
+                                )
+                                -- Case 2: Company invented the patent (no purchase date)
+                                OR (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00'
+                                    AND (
+                                        -- If sold: payment must be before sale
+                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                        -- If not sold: no constraints, accept the payment
+                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
+                                    )
+                                )
+                            )
+                            GROUP BY mf.appno_doc_num";
+                        
+                        echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
+                        
+                        $resultUnderpaid = $con->query($queryUnderpaid);
+                        
+                        if(!$resultUnderpaid) {
+                            echo "QUERY ERROR: ".$con->error."<br/>";
+                        }
+                        
+                        echo "RESULT ROWS: ".($resultUnderpaid ? $resultUnderpaid->num_rows : 'NULL')."<br/>";
+                        
+                        if($resultUnderpaid && $resultUnderpaid->num_rows > 0) {
+                            $underpaidCount = count($calculatedAssetsForUnPaidDue);
+                            
+                            // Batch insert for better performance
+                            $insertValues = array();
+                            while($row = $resultUnderpaid->fetch_object()) {
+                                $otherData = json_encode(array(
+                                    'payment_date' => $row->payment_date,
+                                    'purchase_date' => $row->purchase_date,
+                                    'sale_date' => $row->sale_date
+                                ));
+                                
+                                $insertValues[] = "(
+                                    ".$companyID.", 
+                                    ".$type.", 
+                                    ".$row->appno_doc_num.", 
+                                    '".$con->real_escape_string($row->event_code)."',
+                                    ".$underpaidCount."/* ,
+                                    '".$con->real_escape_string($otherData)."' */
+                                )";
+                            }
+                            
+                            // Insert all records at once
+                            if(!empty($insertValues)) {
+                                $queryInsertUnderpaid = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items 
+                                    (representative_id, type, application, event_code, total) 
+                                    VALUES ".implode(',', $insertValues);
+                                $con->query($queryInsertUnderpaid);
+                            }
+                            
+                            echo "UNDERPAID ASSETS FOUND: ".$underpaidCount."<br/>";
+                        } else {
+                            echo "UNDERPAID ASSETS NOT FOUND: 0<br/>";
+                        }
+                    }
+
+
                     foreach($allTypes as $type) {
                         if($type == 35) {   
                             /**
@@ -2473,7 +2588,7 @@ if(count($variables) == 3) {
                             /* $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, organisation_id, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$organisationID." AS organisation_id, ".$companyID." AS representative_id, 0, ".$type." FROM ".$dbApplication.".dashboard_items WHERE organisation_id = ".$organisationID."  AND representative_id = ".$companyID." AND type = ".$type;
                             
                             $con->query($queryInsertCounter);   */
-                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0, ".$type." FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0, ".$type." FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         }
