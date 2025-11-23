@@ -2579,7 +2579,7 @@ if(count($variables) == 3) {
                             $con->query($queryInsertLawFirms); 
                             
                         } else if ($type < 28 && $type != 20) {
-                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp2 ) AS temp";
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp2 ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         }  else if($type == 34) {
