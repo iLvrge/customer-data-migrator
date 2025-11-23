@@ -2375,11 +2375,13 @@ if(count($variables) == 3) {
                     $calculatedAssetsForUnPaidDue = array_unique(array_merge($originalApplicantAssets, $originalList));
                     $inList = implode(',', $calculatedAssetsForUnPaidDue);
 
-                    $paymentCodes = implode(',', [
+                    $eventCodes = [
                         "M1551", "M1552", "M1553", "M1554", "M1555", "M1556",
                         "M2551", "M2552", "M2553", "M2554", "M2555", "M2556",
                         "M3551", "M3552", "M3553", "M3554", "M3555", "M3556"
-                    ]);
+                    ];
+
+                    $paymentCodes = "'" . implode("','", $eventCodes) . "'";
                     
                     if(!empty($companyAssignorAndAssigneeIDs)) {
                         // Optimized single query approach - get all data at once using JOINs
