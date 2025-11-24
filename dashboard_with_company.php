@@ -2376,9 +2376,7 @@ if(count($variables) == 3) {
                     $inList = implode(',', $calculatedAssetsForUnPaidDue);
 
                     $eventCodes = [
-                        "M1551", "M1552", "M1553", "M1554", "M1555", "M1556",
-                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556",
-                        "M3551", "M3552", "M3553", "M3554", "M3555", "M3556"
+                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556"
                     ];
 
                     $paymentCodes = "'" . implode("','", $eventCodes) . "'";
@@ -2388,6 +2386,7 @@ if(count($variables) == 3) {
                         $queryUnderpaid = "
                             SELECT 
                                 mf.appno_doc_num,
+                                doc.grant_doc_num,
                                 date_format(mf.event_date, '%Y-%m-%d') AS payment_date,
                                 mf.event_code,
                                 purchase.exec_dt AS purchase_date,
@@ -2461,6 +2460,7 @@ if(count($variables) == 3) {
                                 $insertValues[] = "(
                                     ".$companyID.", 
                                     ".$type.", 
+                                    '".$con->real_escape_string($row->grant_doc_num)."',
                                     ".$row->appno_doc_num.", 
                                     '".$con->real_escape_string($row->event_code)."',
                                     ".$underpaidCount."/* ,
@@ -2471,7 +2471,7 @@ if(count($variables) == 3) {
                             // Insert all records at once
                             if(!empty($insertValues)) {
                                 $queryInsertUnderpaid = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items 
-                                    (representative_id, type, application, event_code, total) 
+                                    (representative_id, type, patent, application, event_code, total) 
                                     VALUES ".implode(',', $insertValues);
                                 $con->query($queryInsertUnderpaid);
                             }
@@ -2578,7 +2578,7 @@ if(count($variables) == 3) {
                             
                             $con->query($queryInsertLawFirms); 
                             
-                        } else if ($type < 28 && $type != 20) {
+                        } else if ($type < 28 && $type != 20 && $type != 27) {
                             $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp2 ) AS temp";
                             
                             $con->query($queryInsertCounter);  
