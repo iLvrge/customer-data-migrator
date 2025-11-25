@@ -23,7 +23,7 @@ if ($con->connect_error) {
 echo "Connected to database successfully\n";
 
 // First, get the count of records
-$countQuery = "SELECT COUNT(*) as total FROM db_uspto.documentid WHERE date_format(appno_date, '%Y') < 2000 AND pgpub_doc_num IS NOT NULL AND pgpub_date IS NOT NULL";
+$countQuery = "SELECT COUNT(*) as total FROM db_uspto.documentid WHERE date_format(appno_date, '%Y') < 2000 AND appno_date IS NOT NULL AND appno_date != '0000-00-00' AND pgpub_doc_num IS NOT NULL AND pgpub_date IS NOT NULL";
 $countResult = $con->query($countQuery);
 
 if ($countResult) {
@@ -48,6 +48,8 @@ echo "Starting to generate file list...\n";
 $query = "SELECT pgpub_doc_num, DATE_FORMAT(pgpub_date, '%Y%m%d') as formatted_date 
           FROM db_uspto.documentid 
           WHERE date_format(appno_date, '%Y') < 2000 
+          AND appno_date IS NOT NULL 
+          AND appno_date != '0000-00-00' 
           AND pgpub_doc_num IS NOT NULL 
           AND pgpub_date IS NOT NULL";
 
