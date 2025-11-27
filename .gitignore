@@ -1,6 +1,20 @@
-node_modules/
-vendors/
+# Ignore vendor folder
+vendor/
+
+# Ignore XML files
+*.xml
+
+# Ignore SQL files
+*.sql
+
+# Ignore LOG files
 *.log
+
+# Common OS / editor files (optional but recommended)
+.DS_Store
+node_modules/
 .env
-*.json
-*.php.bak
+
+
+playwright/
+

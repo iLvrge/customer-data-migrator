@@ -29,8 +29,9 @@ if(count($variables) == 2) {
 				echo "Creating Company database<br/>";
 				$org_db = 'db_'.$organisationID.uniqid(); 
 				$org_usr = uniqid();		
-				$org_pass = strtoupper(chr(rand(65,90))).'!'.uniqid();
-				$org_host = '167.172.195.92';
+				$org_pass = strtoupper(chr(rand(65,90))).'!'.uniqid();	
+				//$org_host = '167.172.195.92';
+			        $org_host = getenv('DB_HOST');
 				$org_key = '';		
 				/*echo "CREATE DATABASE ".$org_db."<br/>";
 				echo "CREATE USER '".$org_usr."'@'%' IDENTIFIED BY '".$org_pass."'<br/>";

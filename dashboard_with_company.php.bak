@@ -17,14 +17,14 @@ $dbApplication = 'db_new_application';
 $con = new mysqli($host, $user, $password, $dbUSPTO);
 
 function removeDoubleSpace($string) {
-    return trim(preg_replace('/\s+/',' ', $string));
+	return trim(preg_replace('/\s+/',' ', $string));
 }
  
 function strReplace( $string ) {
-    $string = preg_replace('/,/', '', $string);
-    $string = preg_replace('/\./', '', $string);
-    $string = preg_replace('/!/', '', $string);
-    return trim(ucwords(strtolower($string)));
+	$string = preg_replace('/,/', '', $string);
+	$string = preg_replace('/\./', '', $string);
+	$string = preg_replace('/!/', '', $string);
+	return trim(ucwords(strtolower($string)));
 }
 
 function get_corpus_index($corpus = array(), $separator=' ') {
@@ -122,15 +122,15 @@ function get_similar_documents($query='', $corpus=array(), $separator=' '){
 
 $variables = $argv;
 if(count($variables) == 3) {
-    $company = $variables[1];
-    $organisationID = $variables[2];
+	$company = $variables[1];
+	$organisationID = $variables[2];
 
 
-    if((int)$organisationID > 0) {  
+	if((int)$organisationID > 0) {	
         $listAllAssets = array();
-        $companiesData = array();
+		$companiesData = array();
         $companyAddress = array();
-        $query = 'SELECT * FROM '.$dbBusiness.'.organisation WHERE org_pass <> "" AND organisation_id = '.(int)$organisationID; 
+        $query = 'SELECT * FROM '.$dbBusiness.'.organisation WHERE org_pass <> "" AND organisation_id = '.(int)$organisationID;	
         $result = $con->query($query);
         $companyList = array();
 
@@ -143,7 +143,8 @@ if(count($variables) == 3) {
                 }  
             } catch(Exception $e) { 
             }
-        } 
+        }
+
 
         if($result && $result->num_rows > 0) {  
             while($row = $result->fetch_object()) {
@@ -161,7 +162,7 @@ if(count($variables) == 3) {
                         $queryRepresentative .= " AND parent_id = 0 ";
                     }
 
-                    $resultRepresentative = $orgConnect->query($queryRepresentative);   
+                    $resultRepresentative = $orgConnect->query($queryRepresentative);	
                     if($resultRepresentative && $resultRepresentative->num_rows > 0) {
                         while($representative = $resultRepresentative->fetch_object()){
                             array_push($companiesData, array('representative_id'=>$representative->company_id, 'name'=>$representative->representative_name));
@@ -181,10 +182,10 @@ if(count($variables) == 3) {
                     }
 
                     if($company == "") {
-                        $queryRepresentative = "SELECT representative_id, representative_name FROM representative WHERE type = 1 AND parent_id = 0";    
+                        $queryRepresentative = "SELECT representative_id, representative_name FROM representative WHERE type = 1 AND parent_id = 0";	
                         $resultRepresentativeParentCompany = $orgConnect->query($queryRepresentative);
-                
-                        if($resultRepresentativeParentCompany && $resultRepresentativeParentCompany->num_rows > 0) {                    
+				
+                        if($resultRepresentativeParentCompany && $resultRepresentativeParentCompany->num_rows > 0) {					
                             while($getGroup = $resultRepresentativeParentCompany->fetch_object()) {
                                 $queryGroupRepresentative = "SELECT representative_id, company_id, representative_name FROM representative WHERE type = 0 AND parent_id = ".$getGroup->representative_id;
                                 
@@ -208,13 +209,13 @@ if(count($variables) == 3) {
                             $queryGroupRepresentative .= " AND company_id = ".$company;
                         }
                         
-                        $resultGroupRepresentative = $orgConnect->query($queryGroupRepresentative); 
+                        $resultGroupRepresentative = $orgConnect->query($queryGroupRepresentative);	
                         if($resultGroupRepresentative && $resultGroupRepresentative->num_rows > 0) {
                             while($representativeGroup = $resultGroupRepresentative->fetch_object()){
 
                                 $queryRepresentative = "SELECT representative_id, company_id, representative_name FROM representative WHERE type = 0 AND parent_id = ".$representativeGroup->representative_id; 
                                
-                                $resultRepresentative = $orgConnect->query($queryRepresentative);   
+                                $resultRepresentative = $orgConnect->query($queryRepresentative);	
                                 if($resultRepresentative && $resultRepresentative->num_rows > 0) {
                                     while($representative = $resultRepresentative->fetch_object()){
                                         array_push($companiesData, array('representative_id'=>$representative->company_id, 'name'=>$representative->representative_name));
@@ -273,7 +274,7 @@ if(count($variables) == 3) {
 
                
 
-            foreach($companiesData as $company) {   
+            foreach($companiesData as $company) {	
                 $companyID = $company['representative_id'];
 
                 
@@ -281,7 +282,7 @@ if(count($variables) == 3) {
                 $listAllAssets = array();
                 $queryFindCompanyRepresentative = "SELECT representative_id FROM ".$dbUSPTO.".representative WHERE representative_name = '".$con->real_escape_string($company['name'])."' OR representative_id = ".$companyID." ORDER BY representative_id DESC LIMIT 1";
                 echo $queryFindCompanyRepresentative;
-                $resultCompanyRepresentative = $con->query($queryFindCompanyRepresentative);    
+                $resultCompanyRepresentative = $con->query($queryFindCompanyRepresentative);	
                 $representativeID = 0;
                 if($resultCompanyRepresentative->num_rows > 0) {
                     $representativeRow = $resultCompanyRepresentative->fetch_object();
@@ -296,7 +297,7 @@ if(count($variables) == 3) {
                     $queryAssignorAndAssigneeIDs .= "  OR representative_id = ".$representativeID." GROUP BY assignor_and_assignee_id";
                 }
                 echo  $queryAssignorAndAssigneeIDs;
-                $resultCompanyAssignorAndAssigneeIDs = $con->query($queryAssignorAndAssigneeIDs);   
+                $resultCompanyAssignorAndAssigneeIDs = $con->query($queryAssignorAndAssigneeIDs);	
                 $companyAssignorAndAssigneeIDs = array();
                 if($resultCompanyAssignorAndAssigneeIDs->num_rows > 0) {
                     while($companyAssignorAssigneeRow = $resultCompanyAssignorAndAssigneeIDs->fetch_object()) {
@@ -313,7 +314,7 @@ if(count($variables) == 3) {
                     $queryApplicant .= "  OR representative_id = ".$representativeID." GROUP BY assignor_and_assignee_id";
                 }
                 echo $queryApplicant;
-                $resultApplicantAssignorAndAssigneeIDs = $con->query($queryApplicant);  
+                $resultApplicantAssignorAndAssigneeIDs = $con->query($queryApplicant);	
                 $applicantAssignorAndAssigneeIDs = array();
                 if($resultApplicantAssignorAndAssigneeIDs->num_rows > 0) {
                     while($ApplicantAssignorAssigneeRow = $resultApplicantAssignorAndAssigneeIDs->fetch_object()) {
@@ -322,39 +323,29 @@ if(count($variables) == 3) {
                 }
 
                 $applicantAssets = [];
-                $originalApplicantAssets = []; 
-                if (!empty($applicantAssignorAndAssigneeIDs) || !empty($companyAssignorAndAssigneeIDs)) {
-                    $assignorAndAssigneeIDs = implode(',', $applicantAssignorAndAssigneeIDs);
-                    $queryApplicantAssets = "";
-                    if(!empty($applicantAssignorAndAssigneeIDs)) {
-                        $queryApplicantAssets = "SELECT appno_doc_num FROM ( SELECT appno_doc_num  FROM db_patent_grant_bibliographic.applicant 
-                        WHERE assignor_and_assignee_id IN (".$assignorAndAssigneeIDs.")
-                        UNION 
-                        SELECT appno_doc_num FROM db_patent_application_bibliographic.applicant 
-                        WHERE assignor_and_assignee_id IN (".$assignorAndAssigneeIDs.")
-                        UNION
-                        SELECT appno_doc_num  FROM db_patent_grant_bibliographic.assignee 
-                        WHERE assignor_and_assignee_id IN (".$assignorAndAssigneeIDs.")
-                        UNION
-                        SELECT appno_doc_num FROM db_patent_application_bibliographic.assignee 
-                        WHERE assignor_and_assignee_id IN (".$assignorAndAssigneeIDs.")
-                        ) AS temp GROUP BY appno_doc_num ";
-                    }
+                $originalApplicantAssets = [];
+                if(count($applicantAssignorAndAssigneeIDs) > 0) {
+                    $queryApplicantAssets = "SELECT appno_doc_num FROM ( SELECT appno_doc_num  FROM db_patent_grant_bibliographic.applicant 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    UNION 
+                    SELECT appno_doc_num FROM db_patent_application_bibliographic.applicant 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    UNION
+                    SELECT appno_doc_num  FROM db_patent_grant_bibliographic.assignee 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    UNION
+                    SELECT appno_doc_num FROM db_patent_application_bibliographic.assignee 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    ) AS temp GROUP BY appno_doc_num
+                    UNION 
+                    SELECT appno_doc_num FROM ".$dbUSPTO.".table_b  WHERE company_id = ".$companyID." AND appno_doc_num IN (SELECT appno_doc_num FROM ".$dbUSPTO.".documentid WHERE rf_id IN (SELECT rf_id FROM ".$dbApplication.".activity_parties_transactions WHERE company_id = ".$companyID." AND activity_id IN ( 10 ) AND recorded_assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")) GROUP BY appno_doc_num) GROUP BY appno_doc_num";
 
-                    
-
-                    if (!empty($companyAssignorAndAssigneeIDs)) {
-
-                        if(!empty($queryApplicantAssets)) {
-                            $queryApplicantAssets .= " UNION ";
-                        }
-
-                        $queryApplicantAssets .= " SELECT appno_doc_num FROM $dbUSPTO.table_b  WHERE company_id = $companyID AND appno_doc_num IN ( SELECT d.appno_doc_num FROM $dbUSPTO.documentid AS d INNER JOIN $dbApplication.activity_parties_transactions AS apt ON apt.rf_id = d.rf_id 
-                            WHERE apt.company_id = $companyID AND apt.activity_id IN ( 10 ) AND apt.recorded_assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).") GROUP BY d.appno_doc_num) GROUP BY appno_doc_num";
-                    }
-                    
-
-                   
+                   /*  echo $queryApplicantAssets = "SELECT appno_doc_num FROM ( SELECT appno_doc_num  FROM db_patent_grant_bibliographic.applicant 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    UNION 
+                    SELECT appno_doc_num FROM db_patent_application_bibliographic.applicant 
+                    WHERE assignor_and_assignee_id IN (".implode(',', $applicantAssignorAndAssigneeIDs).")
+                    ) AS temp GROUP BY appno_doc_num"; */
                     echo $queryApplicantAssets;
                     $resultApplicantAssetsList = $con->query($queryApplicantAssets);
                     if($resultApplicantAssetsList && $resultApplicantAssetsList->num_rows > 0) {
@@ -366,7 +357,7 @@ if(count($variables) == 3) {
 
                 $originalApplicantAssets = $applicantAssets;
                
-                print_r($companyAssignorAndAssigneeIDs);
+                //print_r($companyAssignorAndAssigneeIDs);
                 echo "COMPANYID: ".$companyID."<br/>";
                 /*$queryAllAssetsList = "SELECT appno_doc_num FROM ".$dbApplication.".assets WHERE company_id = ".$companyID." AND date_format(assets.appno_date, '%Y') > 1999 AND organisation_id = ".$organisationID." AND assets.layout_id = 15 GROUP BY appno_doc_num";*/
                 /**
@@ -397,20 +388,6 @@ if(count($variables) == 3) {
                 if($resultAllAssetsList && $resultAllAssetsList->num_rows > 0) {
                     while($rowAsset = $resultAllAssetsList->fetch_object()) {
                         array_push($companyAllAssets, '"'.$rowAsset->appno_doc_num.'"');
-                    }
-                } 
-
-
-                $companyAllTransactionAssets = array();
-
-               $queryAllAssetsList = "SELECT appno_doc_num FROM ".$dbUSPTO.".documentid WHERE rf_id IN (SELECT rf_id FROM ".$dbApplication.".activity_parties_transactions WHERE company_id = ".$companyID." AND recorded_assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).") ) GROUP BY appno_doc_num";
-
-                echo $queryAllAssetsList;
-                
-                $resultAllAssetsList = $con->query($queryAllAssetsList);
-                if($resultAllAssetsList && $resultAllAssetsList->num_rows > 0) {
-                    while($rowAsset = $resultAllAssetsList->fetch_object()) {
-                        array_push($companyAllTransactionAssets, '"'.$rowAsset->appno_doc_num.'"');
                     }
                 } 
                 
@@ -446,8 +423,7 @@ if(count($variables) == 3) {
                 $ownedAfterSold = $listAllAssets ;
                 $expiredAssets = array();
                 $onlyExpiredAssets = array();
-                $currentDate = new DateTime('now'); 
-                
+                $currentDate = new DateTime('now');
                 if(count($listAllAssets) > 0 || count($applicantAssets) > 0) { 
                     $designAssetsFirstPart = array();
                     $designAssetsSecondPart = array(); 
@@ -490,11 +466,9 @@ if(count($variables) == 3) {
                             }
                         } 
 
-                        $findFromAllAssets = array_merge($listAllAssets, $applicantAssets);
+                        $findPatentsAssets = "SELECT MAX(appno_doc_num) AS appno_doc_num FROM db_uspto.documentid WHERE grant_doc_num <> '' AND grant_doc_num <> '' AND appno_doc_num IN (".implode(',', $listAllAssets).") GROUP BY appno_doc_num ";
 
-                        $findPatentsAssets = "SELECT MAX(appno_doc_num) AS appno_doc_num FROM db_uspto.documentid WHERE grant_doc_num <> '' AND grant_doc_num <> '' AND appno_doc_num IN (".implode(',', $findFromAllAssets).")  GROUP BY appno_doc_num ";
 
-                        echo "Grant Application Assets: ".$findPatentsAssets."<br/>";
                         $resultGrantApplications = $con->query($findPatentsAssets); 
                         if($resultGrantApplications && $resultGrantApplications->num_rows > 0) {
                             while($rowAsset = $resultGrantApplications->fetch_object()) {
@@ -955,8 +929,8 @@ if(count($variables) == 3) {
                 $con->query($deleteQuery); 
 
                 $con->query("DELETE FROM ".$dbApplication.".owned_assets WHERE company_id = ".$companyID);
-               
-                if(count($originalList) > 0  || count($expiredAssets) > 0 || count($soldAssets) > 0 || count($applicantAssets) > 0 || count($companyAllTransactionAssets) > 0 ) {  
+
+                if(count($originalList) > 0  || count($expiredAssets) > 0 || count($soldAssets) > 0 || count($applicantAssets) > 0 ) {  
 
                    
                    
@@ -988,10 +962,7 @@ if(count($variables) == 3) {
                         $type = 31;
                         $applicantAndEmployee = array_merge($applicantAssets, $employeeAssets);  
 
-                            $queryApplicantPatent = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$companyID.", 0, ".$type.", CASE 
-                            WHEN d.grant_doc_num LIKE 'D0%' THEN CONCAT('D', SUBSTRING(d.grant_doc_num, 3))
-                            ELSE d.grant_doc_num
-                        END AS patent, d.appno_doc_num, 0, 0 FROM db_patent_application_bibliographic.application_grant AS d  WHERE date_format(d.appno_date, '%Y') > ".$YEAR." AND d.appno_doc_num IN (".implode(',', $applicantAndEmployee).") ";
+                            $queryApplicantPatent = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$companyID.", 0, ".$type.", d.grant_doc_num, d.appno_doc_num, 0, 0 FROM db_patent_application_bibliographic.application_grant AS d  WHERE date_format(d.appno_date, '%Y') > ".$YEAR." AND d.appno_doc_num IN (".implode(',', $applicantAndEmployee).") ";
 
                             if(count($soldAssets) > 0) {
                                 $queryApplicantPatent .= " AND d.appno_doc_num NOT IN (".implode(',', $soldAssets).") ";
@@ -1069,10 +1040,7 @@ if(count($variables) == 3) {
                         
 
 
-                        $querySoldAsset = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT  ".$companyID.", 0, ".$type.", CASE 
-                        WHEN MAX(d.grant_doc_num) LIKE 'D0%' THEN CONCAT('D', SUBSTRING(MAX(d.grant_doc_num), 3))
-                        ELSE MAX(d.grant_doc_num)
-                    END AS patent , MAX(d.appno_doc_num), 0, 0 FROM db_patent_application_bibliographic.application_grant AS d  WHERE date_format(d.appno_date, '%Y') > ".$YEAR." AND d.appno_doc_num IN (".implode(',', $soldAssets).") AND d.appno_doc_num NOT IN (SELECT application FROM db_new_application.dashboard_items WHERE representative_id = ".$companyID." AND type = 33 GROUP BY application)  GROUP BY d.appno_doc_num";
+                        $querySoldAsset = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT  ".$companyID.", 0, ".$type.", MAX(d.grant_doc_num), MAX(d.appno_doc_num), 0, 0 FROM db_patent_application_bibliographic.application_grant AS d  WHERE date_format(d.appno_date, '%Y') > ".$YEAR." AND d.appno_doc_num IN (".implode(',', $soldAssets).") AND d.appno_doc_num NOT IN (SELECT application FROM db_new_application.dashboard_items WHERE representative_id = ".$companyID." AND type = 33 GROUP BY application)  GROUP BY d.appno_doc_num";
                         $con->query($querySoldAsset);
 
                         $querySoldAsset = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT  ".$companyID.", 0, ".$type.", MAX(d.grant_doc_num), MAX(d.appno_doc_num), 0, 0 FROM db_patent_grant_bibliographic.application_publication AS d  WHERE date_format(d.appno_date, '%Y') > ".$YEAR." AND d.appno_doc_num IN (".implode(',', $soldAssets).") AND d.appno_doc_num NOT IN (SELECT application FROM db_new_application.dashboard_items WHERE representative_id = ".$companyID." AND type = 33 GROUP BY application)  GROUP BY d.appno_doc_num";
@@ -1337,27 +1305,19 @@ if(count($variables) == 3) {
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1551','M2551', 'M3551', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '7.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 90 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 102 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate  FROM db_uspto.documentid AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1552','M2552', 'M3552', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '11.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 138 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 150 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_uspto.documentid AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1553','M2553', 'M3553', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND  currentDate >= due_date AND currentDate <= grace_end_date ) AS temp1) AS tempAll INNER JOIN db_patent_maintainence_fee.event_maintainence_code_fees AS emcf ON emcf.event_code = tempAll.event_code";
-                        //echo $queryMaintainenceBudget;die;
+                        //echo $queryMaintainenceBudget;
     
                         
                         $con->query($queryMaintainenceBudget);
 
 
-                        $queryMaintainenceBudget = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, event_code, total)
-                        SELECT ".$companyID.", 0, ".$type.", patent, appno_doc_num, 0, event_code, fees_amount FROM (
-                        SELECT CASE 
-                        WHEN MAX(grant_doc_num) LIKE 'D0%' THEN CONCAT('D', SUBSTRING(MAX(grant_doc_num), 3))
-                        ELSE MAX(grant_doc_num)
-                    END AS patent, appno_doc_num, tempAll.event_code, emcf.fees_amount  FROM ( SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, CASE WHEN fees = '3.5' AND status = 'N' THEN 'M1551' WHEN fees = '3.5' AND status = 'Y' THEN 'M2551'  WHEN fees = '3.5' AND status = 'M' THEN 'M3551'  WHEN fees = '7.5' AND status = 'N' THEN 'M1552'  WHEN fees = '7.5' AND status = 'Y' THEN 'M2552'  WHEN fees = '7.5' AND status = 'M' THEN 'M3552'  WHEN fees = '11.5' AND status = 'N' THEN 'M1553'  WHEN fees = '11.5' AND status = 'Y' THEN 'M2553' WHEN fees = '11.5' AND status = 'M' THEN 'M3553' ELSE '' END AS event_code FROM (SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '3.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 42 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 54 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_patent_application_bibliographic.application_grant AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
+                        $queryMaintainenceBudget = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, event_code, total) SELECT ".$companyID.", 0, ".$type.", grant_doc_num, appno_doc_num, 0, tempAll.event_code, emcf.fees_amount  FROM ( SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, CASE WHEN fees = '3.5' AND status = 'N' THEN 'M1551' WHEN fees = '3.5' AND status = 'Y' THEN 'M2551'  WHEN fees = '3.5' AND status = 'M' THEN 'M3551'  WHEN fees = '7.5' AND status = 'N' THEN 'M1552'  WHEN fees = '7.5' AND status = 'Y' THEN 'M2552'  WHEN fees = '7.5' AND status = 'M' THEN 'M3552'  WHEN fees = '11.5' AND status = 'N' THEN 'M1553'  WHEN fees = '11.5' AND status = 'Y' THEN 'M2553' WHEN fees = '11.5' AND status = 'M' THEN 'M3553' ELSE '' END AS event_code FROM (SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '3.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 42 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 54 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_patent_application_bibliographic.application_grant AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1551','M2551', 'M3551', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '7.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 90 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 102 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate  FROM db_patent_application_bibliographic.application_grant AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1552','M2552', 'M3552', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '11.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 138 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 150 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_patent_application_bibliographic.application_grant AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1553','M2553', 'M3553', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND  currentDate >= due_date AND currentDate <= grace_end_date ) AS temp1) AS tempAll INNER JOIN db_patent_maintainence_fee.event_maintainence_code_fees AS emcf ON emcf.event_code = tempAll.event_code WHERE appno_doc_num NOT IN (SELECT application FROM db_new_application.dashboard_items
-                        where representative_id = ".$companyID." AND type = ".$type." )) AS ALLTEMP WHERE event_code <> '' AND fees_amount IS NOT NULL";
-
+                        where representative_id = ".$companyID." AND type = ".$type.")";
 
                         
-
-                        //echo $queryMaintainenceBudget;die;
                         $con->query($queryMaintainenceBudget);
 
 
@@ -1369,7 +1329,7 @@ if(count($variables) == 3) {
                         CASE WHEN tempAll.event_code = 'M1551' THEN 500 WHEN tempAll.event_code = 'M2551' THEN 250 WHEN tempAll.event_code = 'M3551' THEN 125 WHEN tempAll.event_code = 'M1552' THEN 500 WHEN tempAll.event_code = 'M2552' THEN 250 WHEN tempAll.event_code = 'M3552' THEN 125 WHEN tempAll.event_code = 'M1553' THEN 500  WHEN tempAll.event_code = 'M2553' THEN 250 WHEN tempAll.event_code = 'M3553' THEN 125 ELSE 0 END AS surcharge_amount  FROM ( SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, CASE WHEN fees = '3.5' AND status = 'N' THEN 'M1551' WHEN fees = '3.5' AND status = 'Y' THEN 'M2551'  WHEN fees = '3.5' AND status = 'M' THEN 'M3551'  WHEN fees = '7.5' AND status = 'N' THEN 'M1552'  WHEN fees = '7.5' AND status = 'Y' THEN 'M2552'  WHEN fees = '7.5' AND status = 'M' THEN 'M3552'  WHEN fees = '11.5' AND status = 'N' THEN 'M1553'  WHEN fees = '11.5' AND status = 'Y' THEN 'M2553' WHEN fees = '11.5' AND status = 'M' THEN 'M3553' ELSE '' END AS event_code, due_date, grace_end_date FROM (SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status, due_date, grace_end_date FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '3.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 42 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 54 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_uspto.documentid AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1551','M2551', 'M3551', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status, due_date, grace_end_date FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '7.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 90 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 102 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate  FROM db_uspto.documentid AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
                         WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1552','M2552', 'M3552', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND currentDate >= due_date AND currentDate <= grace_end_date UNION SELECT grant_doc_num, appno_doc_num, grant_date, appno_date, fees, status, due_date, grace_end_date FROM (SELECT MAX(doc.grant_doc_num) AS grant_doc_num, MAX(doc.appno_doc_num) AS appno_doc_num, MAX(grant_date) AS grant_date, MAX(appno_date) AS appno_date, '11.5' AS fees, '".$defaultEntityStatus."' AS status, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 138 MONTH), '%Y-%m-%d') AS due_date, date_format(DATE_ADD(MAX(doc.grant_date), INTERVAL 150 MONTH), '%Y-%m-%d') AS grace_end_date,  '".$formatCurrentDate."' AS currentDate FROM db_uspto.documentid AS doc WHERE doc.appno_doc_num IN (".$implodeOwned.") AND doc.appno_doc_num NOT IN (SELECT appno_doc_num FROM db_patent_maintainence_fee.event_maintainence_fees
-                        WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1553','M2553', 'M3553', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND  currentDate >= due_date AND currentDate <= grace_end_date ) AS temp1) AS tempAll INNER JOIN db_patent_maintainence_fee.event_maintainence_code_fees AS emcf ON emcf.event_code = tempAll.event_code ");
+                        WHERE appno_doc_num IN (".$implodeOwned.") AND event_code IN ('M1553','M2553', 'M3553', 'EXP', 'EXP.') ) GROUP BY doc.appno_doc_num) AS temp WHERE grant_doc_num <> '' AND grant_doc_num NOT LIKE 'D%' AND  currentDate >= due_date AND currentDate <= grace_end_date ) AS temp1) AS tempAll INNER JOIN db_patent_maintainence_fee.event_maintainence_code_fees AS emcf ON emcf.event_code = tempAll.event_code");
 
                     }
                     
@@ -1472,10 +1432,7 @@ if(count($variables) == 3) {
                             echo $queryPendingApplications."<br/>";
                             $con->query($queryPendingApplications);
                             echo "1ABABABABABABABBAABABABABBAB";
-                            $queryPendingApplications = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$companyID.", 0, ".$type.", CASE 
-                            WHEN MAX(grant_doc_num) LIKE 'D0%' THEN CONCAT('D', SUBSTRING(MAX(grant_doc_num), 3))
-                            ELSE MAX(grant_doc_num)
-                        END AS patent , appno_doc_num, 0, 0  FROM db_patent_application_bibliographic.application_grant AS d   WHERE date_format(d.appno_date, '%Y') > ".$YEAR."  AND d.appno_doc_num IN (".implode(',', $remainingAssets).") AND d.appno_doc_num NOT IN (SELECT application FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type.") GROUP BY d.appno_doc_num ";
+                            $queryPendingApplications = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$companyID.", 0, ".$type.", grant_doc_num, appno_doc_num, 0, 0  FROM db_patent_application_bibliographic.application_grant AS d   WHERE date_format(d.appno_date, '%Y') > ".$YEAR."  AND d.appno_doc_num IN (".implode(',', $remainingAssets).") AND d.appno_doc_num NOT IN (SELECT application FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type.") GROUP BY d.appno_doc_num ";
                             echo "2ABABABABABABABBAABABABABBAB";
                             $con->query($queryPendingApplications);
                             echo $queryPendingApplications."<br/>";
@@ -1551,10 +1508,7 @@ if(count($variables) == 3) {
                     $type = 39;
 
 
-                    $queryTopInventor ="INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, name, assignor_id, type, patent, application ) SELECT ".$companyID.", IF(representative_name <> '' , representative_name, aaa.name), aaa.assignor_and_assignee_id,  ".$type.", CASE 
-                    WHEN MAX(ag.grant_doc_num) LIKE 'D0%' THEN CONCAT('D', SUBSTRING(MAX(ag.grant_doc_num), 3))
-                    ELSE MAX(ag.grant_doc_num)
-                END AS patent, ag.appno_doc_num FROM db_patent_application_bibliographic.inventor AS inv 
+                    $queryTopInventor ="INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, name, assignor_id, type, patent, application ) SELECT ".$companyID.", IF(representative_name <> '' , representative_name, aaa.name), aaa.assignor_and_assignee_id,  ".$type.", ag.grant_doc_num, ag.appno_doc_num FROM db_patent_application_bibliographic.inventor AS inv 
                     INNER JOIN db_patent_application_bibliographic.assignor_and_assignee AS aaa ON aaa.assignor_and_assignee_id = inv.assignor_and_assignee_id LEFT JOIN db_uspto.representative AS r ON r.representative_id = aaa.representative_id
                     INNER JOIN db_patent_application_bibliographic.application_grant AS ag ON ag.appno_doc_num COLLATE utf8mb4_general_ci = inv.appno_doc_num COLLATE utf8mb4_general_ci
                     WHERE inv.appno_doc_num IN (".implode(',', $originalApplicantAssets).") GROUP BY aaa.name, ag.appno_doc_num ";
@@ -1593,8 +1547,6 @@ if(count($variables) == 3) {
                         INNER JOIN ".$dbUSPTO.".documentid AS doc ON doc.rf_id = apt.rf_id 
                         where ass.assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).") and apt.company_id = ".$companyID." AND date_format(apt.exec_dt, '%Y') > 1999 AND c.cname <> ''
                         GROUP BY apt.rf_id) AS temp GROUP BY rf_id, lawfirm";
-                    echo $queryLawFirms;
-
                     
                     $con->query($queryLawFirms);
 
@@ -1784,7 +1736,7 @@ if(count($variables) == 3) {
                         echo "INNNNNNNNNNNN";
                         $queryFillingInventor = "INSERT IGNORE INTO `db_uspto`.`temp_application_inventor_count` (appno_doc_num, counter, company_id)  SELECT appno_doc_num, inventor_count, ".$companyID." FROM ( SELECT inventor.appno_doc_num, COUNT(DISTINCT inventor.name) AS inventor_count 
                         FROM db_patent_application_bibliographic.inventor AS inventor WHERE inventor.appno_doc_num IN (".implode(',', $clientOwnedAssets).") GROUP BY inventor.appno_doc_num UNION SELECT inventor.appno_doc_num, COUNT(DISTINCT inventor.name) AS inventor_count FROM db_patent_grant_bibliographic.inventor AS inventor WHERE inventor.appno_doc_num IN (".implode(',', $clientOwnedAssets).") GROUP BY inventor.appno_doc_num) AS temp1";
-                        
+                        echo $queryFillingInventor;
                         $con->query($queryFillingInventor); 
 
                         $queryAssignmentEmployee = "INSERT IGNORE INTO `db_uspto`.`temp_application_employee_count` (appno_doc_num, counter, company_id) Select appno_doc_num, COUNT(DISTINCT name) AS employee_count, ".$companyID." FROM ( Select doc.appno_doc_num, IF(r.representative_name <> '', r.representative_name, aaa.name) AS name FROM db_uspto.documentid AS doc INNER JOIN db_uspto.assignor AS aor ON aor.rf_id = doc.rf_id INNER JOIN db_uspto.assignor_and_assignee AS aaa ON aaa.assignor_and_assignee_id = aor.assignor_and_assignee_id LEFT JOIN db_uspto.representative AS r ON r.representative_id = aaa.representative_id LEFT JOIN db_uspto.representative_assignment_conveyance AS rac ON rac.rf_id = aor.rf_id Where doc.appno_doc_num IN (".implode(',', $clientOwnedAssets).") AND (rac.convey_ty = 'employee' OR (rac.convey_ty = 'assignment' AND rac.employer_assign = 1) OR (rac.convey_ty = 'correct' AND rac.employer_assign = 1))) AS temp GROUP BY appno_doc_num";
@@ -1850,14 +1802,15 @@ if(count($variables) == 3) {
                                 }
                             }  
                         }
- 
+
+                        
 
                         $brokedNonInventorAssets = array();
                         foreach($clientOwnedAssets as $ownAsset) {
                             if(!in_array($ownAsset, $applicationBroken)) { 
                                 $queryFindNonInventorLevel = "Select assigneeNames FROM (
                                     SELECT assigneeNames FROM (
-                                    Select IF(r.representative_name <> '', r.representative_name, aaa.name) AS assigneeNames, rac.employer_assign AS employer_assign from documentid  AS doc
+                                    Select IF(r.representative_name <> '', r.representative_name, aaa.name) AS assigneeNames from documentid  AS doc
                                     INNER JOIN assignee AS aee ON aee.rf_id = doc.rf_id
                                     INNER JOIN assignor AS aor ON aor.rf_id = aee.rf_id 
                                     INNER JOIN assignor_and_assignee AS aaa ON aaa.assignor_and_assignee_id = aee.assignor_and_assignee_id
@@ -1875,7 +1828,6 @@ if(count($variables) == 3) {
                                     ORDER BY aor.exec_dt ASC
                                     ) AS temp
                                     WHERE assigneeNames NOT IN (".implode(',', $allCompanyNames).")
-                                    AND employer_assign <> 1
                                     GROUP BY assigneeNames) AS temp1
                                     LEFT JOIN (
                                     
@@ -2011,7 +1963,7 @@ if(count($variables) == 3) {
                     $pastYear3 = $currentDate->modify('-3 year')->format('Y');
                     $pastYear5 = $currentDate->modify('-2 year')->format('Y');
                     $con->query("DELETE FROM ".$dbApplication.".dashboard_items WHERE type = ".$type." AND representative_id = ".$companyID);
-                    
+
                     $queryCPCSection = "SELECT section FROM (SELECT section FROM db_patent_application_bibliographic.patent_cpc AS application_cpc  INNER JOIN (SELECT documentid.appno_doc_num, documentid.grant_doc_num, documentid.appno_date FROM db_uspto.documentid AS documentid WHERE date_format(documentid.appno_date, '%Y') >".$YEAR."  AND documentid.appno_doc_num IN(".implode(',', $clientOwnedAssets).") AND documentid.grant_doc_num <> ''  GROUP BY documentid.appno_doc_num) AS temp ON temp.appno_doc_num = application_cpc.application_number WHERE application_cpc.type = 0  GROUP BY temp.appno_doc_num UNION SELECT section FROM db_patent_grant_bibliographic.application_cpc  INNER JOIN (SELECT documentid.appno_doc_num, documentid.grant_doc_num, documentid.appno_date FROM db_uspto.documentid AS documentid WHERE date_format(documentid.appno_date, '%Y') >".$YEAR."  AND documentid.appno_doc_num IN(".implode(',', $clientOwnedAssets).") AND documentid.grant_doc_num = ''  GROUP BY documentid.appno_doc_num) AS temp ON temp.appno_doc_num = application_cpc.application_number WHERE application_cpc.type = 0  GROUP BY temp.appno_doc_num) temp2 GROUP BY section ORDER BY section ASC";
 
                     $allSections = array();
@@ -2288,12 +2240,12 @@ if(count($variables) == 3) {
                     $queryIncorrectRecording = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$companyID." AS representative_id, assignor_id, ".$type.",   patent,  application, rf_id, ".count($companyAllAssets)."  AS total FROM ( SELECT rac.rf_id AS rf_id, doc.grant_doc_num AS patent, doc.appno_doc_num AS application, 0 AS assignor_id
                     FROM ".$dbApplication.".activity_parties_transactions AS apt 
                     INNER JOIN ".$dbUSPTO.".documentid AS doc ON doc.rf_id = apt.rf_id
-                    INNER JOIN ".$dbUSPTO.".assignment_conveyance AS rac ON rac.rf_id = apt.rf_id
+                    INNER JOIN ".$dbUSPTO.".representative_assignment_conveyance AS rac ON rac.rf_id = apt.rf_id
                     INNER JOIN ".$dbUSPTO.".assignee AS ee ON ee.rf_id = doc.rf_id AND ee.assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
                     WHERE apt.company_id = ".$companyID." 
                     AND doc.appno_doc_num IN (".implode(',', $companyAllAssets).")
                     AND rac.convey_ty = 'correct'
-                    GROUP BY doc.appno_doc_num, rac.rf_id) AS temp";
+                    GROUP BY doc.appno_doc_num) AS temp";
                     $con->query($queryIncorrectRecording);
 
                         echo $queryIncorrectRecording;
@@ -2341,20 +2293,7 @@ if(count($variables) == 3) {
                     /**
                      * $queryDeflatedCollateral = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items (organisation_id, representative_id, assignor_id, type, patent, application, rf_id, total) SELECT ".$organisationID." AS organisation_id, ".$companyID." AS representative_id, 0, ".$type.",  patent, application, rfID, ".count($clientOwnedAssets)." AS total FROM ( SELECT apt.rf_id as rfID, doc.appno_doc_num AS application, doc.grant_doc_num AS patent, doc.appno_date, release_rf_id,  timestampdiff(YEAR, doc.appno_date, '".$currentDate->format('Y-m-d')."' ) as yearDiffer,  IF (temp_expired.status <> '', 1, 0) AS expiredStatus, COUNT(*) OVER() AS total FROM db_new_application.activity_parties_transactions AS apt INNER JOIN db_uspto.documentid AS doc ON doc.rf_id = apt.rf_id  LEFT JOIN ( SELECT appno_doc_num, status FROM db_uspto.application_status  WHERE (`status` LIKE '%abandoned%' OR `status` LIKE '%expired%' OR `status` LIKE '%final rejection%')  AND appno_doc_num IN (".implode(',', $clientOwnedAssets).") ) AS temp_expired ON temp_expired.appno_doc_num = doc.appno_doc_num  WHERE doc.appno_doc_num IN (".implode(',', $clientOwnedAssets).") AND apt.activity_id IN (5, 12) AND (release_rf_id IS NULL OR apt.release_rf_id = 0) AND apt.organisation_id = ".$organisationID."  AND company_id = ".$companyID."  GROUP BY apt.rf_id, doc.appno_doc_num) AS temp WHERE yearDiffer > 19 OR expiredStatus = 1 GROUP BY application ";
                      */
-
-                    /*Assets Divested*/
-                    
-                    $totalAssets = count($expiredAssets);
-
-                    $queryTotalDivested = "SELECT application FROM db_new_application.dashboard_items WHERE type = 33   AND representative_id = ".$companyID." GROUP BY application";
-
-                    $resultDivested = $con->query($queryTotalDivested);
-
-                    if($resultDivested) {
-                        $totalAssets += $resultDivested->num_rows;
-                    }
-
-                    $queryDeflatedCollateral = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items ( representative_id, assignor_id, type, patent, application, rf_id, total) SELECT  ".$companyID." AS representative_id, 0, ".$type.",  patent, application, rfID, ".$totalAssets." AS total FROM ( SELECT apt.rf_id as rfID, doc.appno_doc_num AS application, MAX(doc.grant_doc_num) AS patent, doc.appno_date, release_rf_id,  timestampdiff(YEAR, doc.appno_date, '".$currentDate->format('Y-m-d')."' ) as yearDiffer,  1 AS expiredStatus, COUNT(*) OVER() AS total FROM db_new_application.activity_parties_transactions AS apt INNER JOIN db_uspto.documentid AS doc ON doc.rf_id = apt.rf_id  WHERE ( ";
+                    $queryDeflatedCollateral = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items ( representative_id, assignor_id, type, patent, application, rf_id, total) SELECT  ".$companyID." AS representative_id, 0, ".$type.",  patent, application, rfID, ".count($companyAllAssets)." AS total FROM ( SELECT apt.rf_id as rfID, doc.appno_doc_num AS application, MAX(doc.grant_doc_num) AS patent, doc.appno_date, release_rf_id,  timestampdiff(YEAR, doc.appno_date, '".$currentDate->format('Y-m-d')."' ) as yearDiffer,  1 AS expiredStatus, COUNT(*) OVER() AS total FROM db_new_application.activity_parties_transactions AS apt INNER JOIN db_uspto.documentid AS doc ON doc.rf_id = apt.rf_id  WHERE ( ";
                     
                      
                     if( count($expiredAssets) > 0 ){
@@ -2365,134 +2304,6 @@ if(count($variables) == 3) {
                     echo "DEFLATED COLLATERAL";
                     echo $queryDeflatedCollateral;
                     $con->query($queryDeflatedCollateral);  
-
-
-                     /**
-                     * Underpaid:  (1) = Acquired (base) + Invented (base)    (2) for each of the assets in (1) check against the payments list, and identify those that had a small entity maintenance fee. Create a list of assets and their small entity maintenance fee payment date. I.e. if an asset had three small entity maintenance fee payments, on the list there will be 3 records for that patent. (3) to each asset in (2) attach a Purchase Date (= the date of an OTA in which the Company is assignee), and a Sale Date (=the date of an OTA in which the Company is assignor). If there was no Purchase Date or Sale Date - these values should be set to 0.  (4) From the assets in (3) collect those with Purchase Date < Payment Date < Sale Date.  
-                     *                      
-                     */
-                    $type = 27;
-                    $calculatedAssetsForUnPaidDue = array_unique(array_merge($originalApplicantAssets, $originalList));
-                    $inList = implode(',', $calculatedAssetsForUnPaidDue);
-
-<<<<<<< HEAD
-                    $paymentCodes = implode(',', [
-                        "M1551", "M1552", "M1553", "M1554", "M1555", "M1556",
-                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556",
-                        "M3551", "M3552", "M3553", "M3554", "M3555", "M3556"
-                    ]);
-=======
-                    $eventCodes = [
-                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556"
-                    ];
-
-                    $paymentCodes = "'" . implode("','", $eventCodes) . "'";
->>>>>>> 4ad8d5cd2cae25023d81b738c015d76d82452f71
-                    
-                    if(!empty($companyAssignorAndAssigneeIDs)) {
-                        // Optimized single query approach - get all data at once using JOINs
-                        $queryUnderpaid = "
-                            SELECT 
-                                mf.appno_doc_num,
-<<<<<<< HEAD
-=======
-                                doc.grant_doc_num,
->>>>>>> 4ad8d5cd2cae25023d81b738c015d76d82452f71
-                                date_format(mf.event_date, '%Y-%m-%d') AS payment_date,
-                                mf.event_code,
-                                purchase.exec_dt AS purchase_date,
-                                sale.exec_dt AS sale_date
-                            FROM db_patent_maintainence_fee.event_maintainence_fees AS mf 
-                        INNER JOIN db_uspto.documentid AS doc 
-                            ON doc.appno_doc_num = mf.appno_doc_num
-                            LEFT JOIN (
-                                SELECT assee.rf_id, MIN(assor.exec_dt) AS exec_dt
-                                FROM db_uspto.assignee AS assee
-                                INNER JOIN db_uspto.assignor AS assor ON assor.rf_id = assee.rf_id
-                                WHERE assee.assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
-                                AND assor.exec_dt IS NOT NULL 
-                                AND assor.exec_dt != '0000-00-00'
-                                GROUP BY assee.rf_id
-                            ) AS purchase ON purchase.rf_id = doc.rf_id
-                            LEFT JOIN (
-                                SELECT rf_id, MIN(CASE WHEN exec_dt IS NOT NULL AND exec_dt != '0000-00-00' THEN exec_dt ELSE NULL END) AS exec_dt
-                                FROM db_uspto.assignor
-                                WHERE assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
-                                GROUP BY rf_id
-                            ) AS sale ON sale.rf_id = doc.rf_id
-                            WHERE CONVERT(mf.appno_doc_num USING latin1) COLLATE latin1_swedish_ci IN (".$inList.")
-                            AND mf.event_code IN (".$paymentCodes.") 
-                            AND mf.event_date IS NOT NULL 
-                            AND (
-                                -- Case 1: Company bought the patent (has purchase date)
-                                (purchase.exec_dt IS NOT NULL AND purchase.exec_dt != '0000-00-00' 
-                                    AND purchase.exec_dt < date_format(mf.event_date, '%Y-%m-%d')
-                                    AND (
-                                        -- If sold: payment must be before sale
-                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
-                                        -- If not sold: no sale date constraint
-                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
-                                    )
-                                )
-                                -- Case 2: Company invented the patent (no purchase date)
-                                OR (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00'
-                                    AND (
-                                        -- If sold: payment must be before sale
-                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
-                                        -- If not sold: no constraints, accept the payment
-                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
-                                    )
-                                )
-                            )
-                            GROUP BY mf.appno_doc_num";
-                        
-                        echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
-                        
-                        $resultUnderpaid = $con->query($queryUnderpaid);
-                        
-                        if(!$resultUnderpaid) {
-                            echo "QUERY ERROR: ".$con->error."<br/>";
-                        }
-                        
-                        echo "RESULT ROWS: ".($resultUnderpaid ? $resultUnderpaid->num_rows : 'NULL')."<br/>";
-                        
-                        if($resultUnderpaid && $resultUnderpaid->num_rows > 0) {
-                            $underpaidCount = count($calculatedAssetsForUnPaidDue);
-                            
-                            // Batch insert for better performance
-                            $insertValues = array();
-                            while($row = $resultUnderpaid->fetch_object()) {
-                                $otherData = json_encode(array(
-                                    'payment_date' => $row->payment_date,
-                                    'purchase_date' => $row->purchase_date,
-                                    'sale_date' => $row->sale_date
-                                ));
-                                
-                                $insertValues[] = "(
-                                    ".$companyID.", 
-                                    ".$type.", 
-                                    '".$con->real_escape_string($row->grant_doc_num)."',
-                                    ".$row->appno_doc_num.", 
-                                    '".$con->real_escape_string($row->event_code)."',
-                                    ".$underpaidCount."/* ,
-                                    '".$con->real_escape_string($otherData)."' */
-                                )";
-                            }
-                            
-                            // Insert all records at once
-                                if(!empty($insertValues)) {
-                                    $queryInsertUnderpaid = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items 
-                                        (representative_id, type, patent, application, event_code, total) 
-                                        VALUES ".implode(',', $insertValues);
-                                    $con->query($queryInsertUnderpaid);
-                                }
-                            
-                            echo "UNDERPAID ASSETS FOUND: ".$underpaidCount."<br/>";
-                        } else {
-                            echo "UNDERPAID ASSETS NOT FOUND: 0<br/>";
-                        }
-                    }
-
 
                     foreach($allTypes as $type) {
                         if($type == 35) {   
@@ -2510,8 +2321,8 @@ if(count($variables) == 3) {
                              */
                             $queryFamily = "SELECT cwc.name AS name, COUNT(application_country) AS number FROM (
                                     SELECT grant_doc_num, application_number, application_country FROM db_uspto.assets_family AS af WHERE grant_doc_num IN (
-                                        SELECT patent FROM ".$dbApplication.".dashboard_items AS di WHERE type = 30 AND representative_id = ".$companyID." AND patent <> '' GROUP BY patent
-                                    ) AND application_country NOT IN ('WO', 'US', 'EP') GROUP BY application_number) AS temp 
+                                        SELECT patent FROM ".$dbApplication.".dashboard_items AS di WHERE type = 30 AND representative_id = ".$companyID." GROUP BY patent
+                                    ) AND application_country NOT IN ('WO', 'US', 'EP') GROUP BY grant_doc_num) AS temp 
                                     INNER JOIN db_uspto.country_with_codes AS cwc ON cwc.country_code = temp.application_country 
                                     GROUP BY application_country ORDER BY number DESC, name ASC ";
                             $patentFamily = array();
@@ -2539,7 +2350,7 @@ if(count($variables) == 3) {
                             $resultInventor = $con->query($queryInventor);
                             if($resultInventor && $resultInventor->num_rows > 0) {
                                 while($rowAsset = $resultInventor->fetch_object()) {
-                                    $name = addslashes($rowAsset->name);
+                                    $name = preg_replace("/'/", "", $rowAsset->name);
                                     array_push($allInventor, array('name'=>$name, 'number'=>$rowAsset->number)); 
                                 }
                             }   
@@ -2560,7 +2371,7 @@ if(count($variables) == 3) {
                             $resultParties = $con->query($queryLI);
                             if($resultParties && $resultParties->num_rows > 0) {
                                 while($rowAsset = $resultParties->fetch_object()) {
-                                    $name = addslashes($rowAsset->name);
+                                    $name = preg_replace("/'/", "", $rowAsset->name);
                                     array_push($parties, array('name'=>$name, 'number'=>$rowAsset->number));
                                 }
                             }   
@@ -2580,7 +2391,7 @@ if(count($variables) == 3) {
                             $resultLawFirm = $con->query($queryLawFirm);
                             if($resultLawFirm && $resultLawFirm->num_rows > 0) {
                                 while($rowAsset = $resultLawFirm->fetch_object()) {
-                                    $name = addslashes($rowAsset->name);
+                                    $name = preg_replace("/'/", "", $rowAsset->name);
                                     array_push($allLawfirms, array('name'=>$name, 'number'=>$rowAsset->number)); 
                                 }
                             }  
@@ -2589,11 +2400,11 @@ if(count($variables) == 3) {
                             
                             $con->query($queryInsertLawFirms); 
                             
-                        } else if ($type < 28 && $type != 20 && $type != 27) {
-                                $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp2 ) AS temp";
-                                
-                                $con->query($queryInsertCounter);  
-                         }  else if($type == 34) {
+                        } else if ($type < 28 && $type != 20) {
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp2 ) AS temp";
+                            
+                            $con->query($queryInsertCounter);  
+                        }  else if($type == 34) {
                             $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total,  ".$companyID." AS representative_id, 0, ".$type." FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
                             
                             $con->query($queryInsertCounter);  
@@ -2601,7 +2412,7 @@ if(count($variables) == 3) {
                             /* $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, organisation_id, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$organisationID." AS organisation_id, ".$companyID." AS representative_id, 0, ".$type." FROM ".$dbApplication.".dashboard_items WHERE organisation_id = ".$organisationID."  AND representative_id = ".$companyID." AND type = ".$type;
                             
                             $con->query($queryInsertCounter);   */
-                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0, ".$type." FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0, ".$type." FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         }
