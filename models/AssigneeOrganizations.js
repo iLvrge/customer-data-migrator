@@ -1,0 +1,92 @@
+const Sequelize = require("sequelize");
+
+const connection = require("../config/index");
+
+
+const AssigneeOrganizations = connection.application.define('assignee_organizations',{
+    assignee_id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    }, 
+    assignee_organization:{
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    assignee_query:{
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    domain:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    domain2:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    domain3:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo1:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo2:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo3:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },  
+    api_logo4:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo5:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo6:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo7:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo8:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    api_logo9:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },  
+    without_square:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },    
+    image_url:{
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    organisation_id:{
+        type: Sequelize.INTEGER,
+        allowNull: true,
+    }
+},
+{
+    underscored: true,
+    timestamps: false,
+    freezeTableName: true,
+    tableName: 'assignee_organizations'
+});
+
+module.exports = AssigneeOrganizations;
