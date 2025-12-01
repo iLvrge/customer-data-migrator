@@ -2387,52 +2387,59 @@ if(count($variables) == 3) {
                             SELECT 
                                 mf.appno_doc_num,
                                 doc.grant_doc_num,
-                                date_format(mf.event_date, '%Y-%m-%d') AS payment_date,
+                                DATE_FORMAT(mf.event_date, '%Y-%m-%d') AS payment_date,
                                 mf.event_code,
-                                purchase.exec_dt AS purchase_date,
-                                sale.exec_dt AS sale_date
-                            FROM db_patent_maintainence_fee.event_maintainence_fees AS mf 
-                        INNER JOIN db_uspto.documentid AS doc 
-                            ON doc.appno_doc_num = mf.appno_doc_num
+                                COALESCE(purchase.exec_dt, '0000-00-00') AS purchase_date,
+                                COALESCE(sale.exec_dt, '0000-00-00') AS sale_date
+                            FROM db_patent_maintainence_fee.event_maintainence_fees AS mf
+                            INNER JOIN db_uspto.documentid AS doc 
+                                ON doc.appno_doc_num = mf.appno_doc_num
                             LEFT JOIN (
                                 SELECT assee.rf_id, MIN(assor.exec_dt) AS exec_dt
                                 FROM db_uspto.assignee AS assee
-                                INNER JOIN db_uspto.assignor AS assor ON assor.rf_id = assee.rf_id
+                                INNER JOIN db_uspto.assignor AS assor 
+                                    ON assor.rf_id = assee.rf_id
                                 WHERE assee.assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
-                                AND assor.exec_dt IS NOT NULL 
-                                AND assor.exec_dt != '0000-00-00'
+                                    AND assor.exec_dt IS NOT NULL 
+                                    AND assor.exec_dt != '0000-00-00'
                                 GROUP BY assee.rf_id
                             ) AS purchase ON purchase.rf_id = doc.rf_id
                             LEFT JOIN (
-                                SELECT rf_id, MIN(CASE WHEN exec_dt IS NOT NULL AND exec_dt != '0000-00-00' THEN exec_dt ELSE NULL END) AS exec_dt
+                                SELECT rf_id, MIN(exec_dt) AS exec_dt
                                 FROM db_uspto.assignor
                                 WHERE assignor_and_assignee_id IN (".implode(',', $companyAssignorAndAssigneeIDs).")
+                                    AND exec_dt IS NOT NULL 
+                                    AND exec_dt != '0000-00-00'
                                 GROUP BY rf_id
                             ) AS sale ON sale.rf_id = doc.rf_id
-                            WHERE CONVERT(mf.appno_doc_num USING latin1) COLLATE latin1_swedish_ci IN (".$inList.")
-                            AND mf.event_code IN (".$paymentCodes.") 
-                            AND mf.event_date IS NOT NULL 
-                            AND (
-                                -- Case 1: Company bought the patent (has purchase date)
-                                (purchase.exec_dt IS NOT NULL AND purchase.exec_dt != '0000-00-00' 
-                                    AND purchase.exec_dt < date_format(mf.event_date, '%Y-%m-%d')
-                                    AND (
-                                        -- If sold: payment must be before sale
-                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
-                                        -- If not sold: no sale date constraint
-                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
+                            WHERE 
+                                CONVERT(mf.appno_doc_num USING latin1) COLLATE latin1_swedish_ci IN (".$inList.")
+                                AND mf.event_code IN (".$paymentCodes.")
+                                AND mf.event_date IS NOT NULL
+                                AND (
+                                    -- Case 1: Acquired patent (has purchase date)
+                                    (
+                                        purchase.exec_dt IS NOT NULL 
+                                        AND purchase.exec_dt != '0000-00-00'
+                                        AND purchase.exec_dt < DATE_FORMAT(mf.event_date, '%Y-%m-%d')
+                                        AND (
+                                            (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' 
+                                            AND DATE_FORMAT(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                            OR sale.exec_dt IS NULL 
+                                            OR sale.exec_dt = '0000-00-00'
+                                        )
+                                    )
+                                    -- Case 2: Invented patent (no purchase date)
+                                    OR (
+                                        (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')
+                                        AND (
+                                            (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' 
+                                            AND DATE_FORMAT(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                            OR sale.exec_dt IS NULL 
+                                            OR sale.exec_dt = '0000-00-00'
+                                        )
                                     )
                                 )
-                                -- Case 2: Company invented the patent (no purchase date)
-                                OR (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00'
-                                    AND (
-                                        -- If sold: payment must be before sale
-                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' AND date_format(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
-                                        -- If not sold: no constraints, accept the payment
-                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00')
-                                    )
-                                )
-                            )
                             GROUP BY mf.appno_doc_num";
                         
                         echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
