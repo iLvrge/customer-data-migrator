@@ -2375,29 +2375,18 @@ if(count($variables) == 3) {
                     $calculatedAssetsForUnPaidDue = array_unique(array_merge($originalApplicantAssets, $originalList));
                     $inList = implode(',', $calculatedAssetsForUnPaidDue);
 
-<<<<<<< HEAD
-                    $paymentCodes = implode(',', [
-                        "M1551", "M1552", "M1553", "M1554", "M1555", "M1556",
-                        "M2551", "M2552", "M2553", "M2554", "M2555", "M2556",
-                        "M3551", "M3552", "M3553", "M3554", "M3555", "M3556"
-                    ]);
-=======
                     $eventCodes = [
                         "M2551", "M2552", "M2553", "M2554", "M2555", "M2556"
                     ];
 
                     $paymentCodes = "'" . implode("','", $eventCodes) . "'";
->>>>>>> 4ad8d5cd2cae25023d81b738c015d76d82452f71
                     
                     if(!empty($companyAssignorAndAssigneeIDs)) {
                         // Optimized single query approach - get all data at once using JOINs
                         $queryUnderpaid = "
                             SELECT 
                                 mf.appno_doc_num,
-<<<<<<< HEAD
-=======
                                 doc.grant_doc_num,
->>>>>>> 4ad8d5cd2cae25023d81b738c015d76d82452f71
                                 date_format(mf.event_date, '%Y-%m-%d') AS payment_date,
                                 mf.event_code,
                                 purchase.exec_dt AS purchase_date,
