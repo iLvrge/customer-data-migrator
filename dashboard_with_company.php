@@ -2417,30 +2417,47 @@ if(count($variables) == 3) {
                                 AND mf.event_code IN (".$paymentCodes.")
                                 AND mf.event_date IS NOT NULL
                                 AND (
-                                    -- Case 1: Acquired patent (has purchase date)
+                                    -- ══════════════════════════════════════════════════════════════
+                                    -- Case 1: ACQUIRED patent (has purchase date)
+                                    -- Company bought the patent, so payment must be AFTER purchase
+                                    -- ══════════════════════════════════════════════════════════════
                                     (
                                         purchase.exec_dt IS NOT NULL 
                                         AND purchase.exec_dt != '0000-00-00'
-                                        AND purchase.exec_dt < DATE_FORMAT(mf.event_date, '%Y-%m-%d')
+                                        AND purchase.exec_dt < mf.event_date  -- Payment after purchase
                                         AND (
-                                            (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' 
-                                            AND DATE_FORMAT(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                            -- If SOLD: payment must also be BEFORE sale
+                                            (
+                                                sale.exec_dt IS NOT NULL 
+                                                AND sale.exec_dt != '0000-00-00' 
+                                                AND mf.event_date < sale.exec_dt
+                                            )
+                                            -- If NOT SOLD: no upper bound, include payment
                                             OR sale.exec_dt IS NULL 
                                             OR sale.exec_dt = '0000-00-00'
                                         )
                                     )
-                                    -- Case 2: Invented patent (no purchase date)
+                                    
+                                    -- ══════════════════════════════════════════════════════════════
+                                    -- Case 2: INVENTED patent (no purchase date)
+                                    -- Company owned from beginning, no lower bound needed
+                                    -- ══════════════════════════════════════════════════════════════
                                     OR (
-                                        (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')
+                                        (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')  -- ← PARENTHESES ADDED!
                                         AND (
-                                            (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00' 
-                                            AND DATE_FORMAT(mf.event_date, '%Y-%m-%d') < sale.exec_dt)
+                                            -- If SOLD: payment must be BEFORE sale
+                                            (
+                                                sale.exec_dt IS NOT NULL 
+                                                AND sale.exec_dt != '0000-00-00' 
+                                                AND mf.event_date < sale.exec_dt  -- ← Key constraint!
+                                            )
+                                            -- If NOT SOLD: include all payments
                                             OR sale.exec_dt IS NULL 
                                             OR sale.exec_dt = '0000-00-00'
                                         )
                                     )
                                 )
-                            GROUP BY mf.appno_doc_num";
+                            -- NO GROUP BY - preserve multiple payment records per patent";
                         
                         echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
                         
