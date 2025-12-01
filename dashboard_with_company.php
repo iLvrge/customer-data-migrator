@@ -2417,46 +2417,28 @@ if(count($variables) == 3) {
                                 AND mf.event_code IN (".$paymentCodes.")
                                 AND mf.event_date IS NOT NULL
                                 AND (
-                                    -- ══════════════════════════════════════════════════════════════
-                                    -- Case 1: ACQUIRED patent (has purchase date)
-                                    -- Company bought the patent, so payment must be AFTER purchase
-                                    -- ══════════════════════════════════════════════════════════════
-                                    (
-                                        purchase.exec_dt IS NOT NULL 
-                                        AND purchase.exec_dt != '0000-00-00'
-                                        AND purchase.exec_dt < mf.event_date  -- Payment after purchase
-                                        AND (
-                                            -- If SOLD: payment must also be BEFORE sale
-                                            (
-                                                sale.exec_dt IS NOT NULL 
-                                                AND sale.exec_dt != '0000-00-00' 
-                                                AND mf.event_date < sale.exec_dt
-                                            )
-                                            -- If NOT SOLD: no upper bound, include payment
-                                            OR sale.exec_dt IS NULL 
-                                            OR sale.exec_dt = '0000-00-00'
-                                        )
-                                    )
-                                    
-                                    -- ══════════════════════════════════════════════════════════════
-                                    -- Case 2: INVENTED patent (no purchase date)
-                                    -- Company owned from beginning, no lower bound needed
-                                    -- ══════════════════════════════════════════════════════════════
-                                    OR (
-                                        (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')  -- ← PARENTHESES ADDED!
-                                        AND (
-                                            -- If SOLD: payment must be BEFORE sale
-                                            (
-                                                sale.exec_dt IS NOT NULL 
-                                                AND sale.exec_dt != '0000-00-00' 
-                                                AND mf.event_date < sale.exec_dt  -- ← Key constraint!
-                                            )
-                                            -- If NOT SOLD: include all payments
-                                            OR sale.exec_dt IS NULL 
-                                            OR sale.exec_dt = '0000-00-00'
-                                        )
-                                    )
-                                )
+        /* -------------------- ACQUIRED PATENT -------------------- */
+        (
+            purchase.purchase_date IS NOT NULL
+            AND purchase.purchase_date != '0000-00-00'
+            AND purchase.purchase_date < mf.event_date                  -- payment > purchase
+            AND (
+                (sale.sale_date IS NOT NULL AND sale.sale_date != '0000-00-00'
+                    AND mf.event_date < sale.sale_date)                -- before sale
+                OR (sale.sale_date IS NULL OR sale.sale_date = '0000-00-00') -- no sale
+            )
+        )
+
+        /* -------------------- INVENTED PATENT -------------------- */
+        OR (
+            (purchase.purchase_date IS NULL OR purchase.purchase_date = '0000-00-00')
+            AND (
+                (sale.sale_date IS NOT NULL AND sale.sale_date != '0000-00-00'
+                    AND mf.event_date < sale.sale_date)                -- before sale
+                OR (sale.sale_date IS NULL OR sale.sale_date = '0000-00-00') -- no sale
+            )
+        )
+    ) 
                             -- NO GROUP BY - preserve multiple payment records per patent";
                         
                         echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
