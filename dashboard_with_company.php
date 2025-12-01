@@ -2419,23 +2419,23 @@ if(count($variables) == 3) {
                                 AND (
         /* -------------------- ACQUIRED PATENT -------------------- */
         (
-            purchase.purchase_date IS NOT NULL
-            AND purchase.purchase_date != '0000-00-00'
-            AND purchase.purchase_date < mf.event_date                  -- payment > purchase
+            purchase.exec_dt IS NOT NULL
+            AND purchase.exec_dt != '0000-00-00'
+            AND purchase.exec_dt < mf.event_date                  -- payment > purchase
             AND (
-                (sale.sale_date IS NOT NULL AND sale.sale_date != '0000-00-00'
-                    AND mf.event_date < sale.sale_date)                -- before sale
-                OR (sale.sale_date IS NULL OR sale.sale_date = '0000-00-00') -- no sale
+                (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
+                    AND mf.event_date < sale.exec_dt)                -- before sale
+                OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
             )
         )
 
         /* -------------------- INVENTED PATENT -------------------- */
         OR (
-            (purchase.purchase_date IS NULL OR purchase.purchase_date = '0000-00-00')
+            (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')
             AND (
-                (sale.sale_date IS NOT NULL AND sale.sale_date != '0000-00-00'
-                    AND mf.event_date < sale.sale_date)                -- before sale
-                OR (sale.sale_date IS NULL OR sale.sale_date = '0000-00-00') -- no sale
+                (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
+                    AND mf.event_date < sale.exec_dt)                -- before sale
+                OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
             )
         )
     ) 
