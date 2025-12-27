@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Sequelize = require('sequelize');
 const moment = require('moment');
 const Op = Sequelize.Op;
@@ -17,7 +18,7 @@ const business = new Sequelize(process.env.DATABASE_BUSINESS, process.env.USER, 
 });
 
 
-const resourcesRaw = new Sequelize(process.env.DATABASE_RAW, process.env.USER, process.env.PASSWORD, {
+const resourcesRaw = new Sequelize(process.env.DB_USPTO_DB, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -31,7 +32,7 @@ const resourcesRaw = new Sequelize(process.env.DATABASE_RAW, process.env.USER, p
 });
 
 
-const resources = new Sequelize(process.env.DATABASE_APPLICATION_BIBLIO_NEW, process.env.USER, process.env.PASSWORD, {
+const resources = new Sequelize(process.env.DB_GRANT_BIBLIO_NEW, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -44,7 +45,7 @@ const resources = new Sequelize(process.env.DATABASE_APPLICATION_BIBLIO_NEW, pro
    }*/
 });
 
-const application = new Sequelize(process.env.DATABASE_APPLICATION_NEW, process.env.USER, process.env.PASSWORD, {
+const application = new Sequelize(process.env.DB_APPLICATION_DB, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -58,7 +59,7 @@ const application = new Sequelize(process.env.DATABASE_APPLICATION_NEW, process.
 });
 
 
-const applicationBibliograhic = new Sequelize(process.env.DATABASE_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const applicationBibliograhic = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -71,7 +72,7 @@ const applicationBibliograhic = new Sequelize(process.env.DATABASE_APPLICATION_B
    }*/
 });
 
-const applicationGrant = new Sequelize(process.env.DATABASE_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const applicationGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -84,7 +85,7 @@ const applicationGrant = new Sequelize(process.env.DATABASE_GRANT_BIBLIO, proces
    }*/
 });
 
-const applicationPED = new Sequelize(process.env.DATABASE_PATENT_EXAMINER_DATA, process.env.USER, process.env.PASSWORD, {
+const applicationPED = new Sequelize("db_patent_examiner_data", process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -112,7 +113,7 @@ const inventorDB = new Sequelize('db_inventor', 'db_user_inventor', process.env.
 
 
 
-const biblioGrant = new Sequelize(process.env.DATABASE_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const biblioGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -125,7 +126,7 @@ const biblioGrant = new Sequelize(process.env.DATABASE_GRANT_BIBLIO, process.env
    }*/
 });
 
-const biblioApplication = new Sequelize(process.env.DATABASE_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const biblioApplication = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
