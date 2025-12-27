@@ -1,10 +1,9 @@
-require('dotenv').config();
 const Sequelize = require('sequelize');
 const moment = require('moment');
 const Op = Sequelize.Op;
 
 
-const business = new Sequelize(process.env.DATABASE_BUSINESS, process.env.USER, process.env.PASSWORD, {
+const business = new Sequelize(process.env.DATABASE_BUSINESS, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -18,7 +17,7 @@ const business = new Sequelize(process.env.DATABASE_BUSINESS, process.env.USER, 
 });
 
 
-const resourcesRaw = new Sequelize(process.env.DB_USPTO_DB, process.env.USER, process.env.PASSWORD, {
+const resourcesRaw = new Sequelize(process.env.DB_USPTO_DB, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -32,7 +31,7 @@ const resourcesRaw = new Sequelize(process.env.DB_USPTO_DB, process.env.USER, pr
 });
 
 
-const resources = new Sequelize(process.env.DB_GRANT_BIBLIO_NEW, process.env.USER, process.env.PASSWORD, {
+const resources = new Sequelize(process.env.DB_GRANT_BIBLIO_NEW, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -45,7 +44,7 @@ const resources = new Sequelize(process.env.DB_GRANT_BIBLIO_NEW, process.env.USE
    }*/
 });
 
-const application = new Sequelize(process.env.DB_APPLICATION_DB, process.env.USER, process.env.PASSWORD, {
+const application = new Sequelize(process.env.DB_APPLICATION_DB, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -59,7 +58,7 @@ const application = new Sequelize(process.env.DB_APPLICATION_DB, process.env.USE
 });
 
 
-const applicationBibliograhic = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const applicationBibliograhic = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -72,7 +71,7 @@ const applicationBibliograhic = new Sequelize(process.env.DB_GRANT_BIBLIO, proce
    }*/
 });
 
-const applicationGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const applicationGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -85,7 +84,7 @@ const applicationGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, proces
    }*/
 });
 
-const applicationPED = new Sequelize("db_patent_examiner_data", process.env.USER, process.env.PASSWORD, {
+const applicationPED = new Sequelize("db_patent_examiner_data", process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -98,7 +97,7 @@ const applicationPED = new Sequelize("db_patent_examiner_data", process.env.USER
 });
 
 
-const inventorDB = new Sequelize('db_inventor', 'db_user_inventor', process.env.PASSWORD, {
+const inventorDB = new Sequelize('db_inventor', 'db_DB_USER_inventor', process.env.DB_PASSWORD, {
   host: '165.232.146.68',
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -113,7 +112,7 @@ const inventorDB = new Sequelize('db_inventor', 'db_user_inventor', process.env.
 
 
 
-const biblioGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const biblioGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
@@ -126,7 +125,7 @@ const biblioGrant = new Sequelize(process.env.DB_APPLICATION_BIBLIO, process.env
    }*/
 });
 
-const biblioApplication = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.USER, process.env.PASSWORD, {
+const biblioApplication = new Sequelize(process.env.DB_GRANT_BIBLIO, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   operatorsAliases: Op,
