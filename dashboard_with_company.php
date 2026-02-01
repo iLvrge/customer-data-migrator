@@ -2380,15 +2380,20 @@ if(count($variables) == 3) {
                     ];
 
                     $paymentCodes = "'" . implode("','", $eventCodes) . "'";
+
+                    // Initialize event code counts array
+                    $eventCodeCounts = [];
                     
                     if(!empty($companyAssignorAndAssigneeIDs)) {
                         // Optimized single query approach - get all data at once using JOINs
+                        // Count event codes grouped by event_code
                         $queryUnderpaid = "
                             SELECT 
                                 mf.appno_doc_num,
                                 doc.grant_doc_num,
                                 DATE_FORMAT(mf.event_date, '%Y-%m-%d') AS payment_date,
                                 mf.event_code,
+                                COUNT(*) AS event_count,
                                 COALESCE(purchase.exec_dt, '0000-00-00') AS purchase_date,
                                 COALESCE(sale.exec_dt, '0000-00-00') AS sale_date
                             FROM db_patent_maintainence_fee.event_maintainence_fees AS mf
@@ -2417,29 +2422,29 @@ if(count($variables) == 3) {
                                 AND mf.event_code IN (".$paymentCodes.")
                                 AND mf.event_date IS NOT NULL
                                 AND (
-        /* -------------------- ACQUIRED PATENT -------------------- */
-        (
-            purchase.exec_dt IS NOT NULL
-            AND purchase.exec_dt != '0000-00-00'
-            AND purchase.exec_dt < mf.event_date                  -- payment > purchase
-            AND (
-                (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
-                    AND mf.event_date < sale.exec_dt)                -- before sale
-                OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
-            )
-        )
+                                /* -------------------- ACQUIRED PATENT -------------------- */
+                                (
+                                    purchase.exec_dt IS NOT NULL
+                                    AND purchase.exec_dt != '0000-00-00'
+                                    AND purchase.exec_dt < mf.event_date                  -- payment > purchase
+                                    AND (
+                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
+                                            AND mf.event_date < sale.exec_dt)                -- before sale
+                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
+                                    )
+                                )
 
-        /* -------------------- INVENTED PATENT -------------------- */
-        OR (
-            (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')
-            AND (
-                (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
-                    AND mf.event_date < sale.exec_dt)                -- before sale
-                OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
-            )
-        )
-    ) 
-                            -- NO GROUP BY - preserve multiple payment records per patent";
+                                /* -------------------- INVENTED PATENT -------------------- */
+                                OR (
+                                    (purchase.exec_dt IS NULL OR purchase.exec_dt = '0000-00-00')
+                                    AND (
+                                        (sale.exec_dt IS NOT NULL AND sale.exec_dt != '0000-00-00'
+                                            AND mf.event_date < sale.exec_dt)                -- before sale
+                                        OR (sale.exec_dt IS NULL OR sale.exec_dt = '0000-00-00') -- no sale
+                                    )
+                                )
+                            ) 
+                            GROUP BY mf.appno_doc_num, doc.grant_doc_num, mf.event_code, purchase.exec_dt, sale.exec_dt, mf.event_date";
                         
                         echo "UNDERPAID QUERY: ".$queryUnderpaid."<br/>";
                         
@@ -2457,11 +2462,11 @@ if(count($variables) == 3) {
                             // Batch insert for better performance
                             $insertValues = array();
                             while($row = $resultUnderpaid->fetch_object()) {
-                                $otherData = json_encode(array(
-                                    'payment_date' => $row->payment_date,
-                                    'purchase_date' => $row->purchase_date,
-                                    'sale_date' => $row->sale_date
-                                ));
+                                // Count event codes
+                                if(!isset($eventCodeCounts[$row->event_code])) {
+                                    $eventCodeCounts[$row->event_code] = 0;
+                                }
+                                $eventCodeCounts[$row->event_code] += $row->event_count;
                                 
                                 $insertValues[] = "(
                                     ".$companyID.", 
@@ -2469,8 +2474,7 @@ if(count($variables) == 3) {
                                     '".$con->real_escape_string($row->grant_doc_num)."',
                                     ".$row->appno_doc_num.", 
                                     '".$con->real_escape_string($row->event_code)."',
-                                    ".$underpaidCount."/* ,
-                                    '".$con->real_escape_string($otherData)."' */
+                                    ".$underpaidCount."
                                 )";
                             }
                             
@@ -2584,8 +2588,11 @@ if(count($variables) == 3) {
                             
                             $con->query($queryInsertLawFirms); 
                             
-                        } else if ($type == 27) { 
-                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." ) AS temp2 ) AS temp";
+                        } else if ($type == 27) {
+                            // Use the event code counts collected during the insert loop
+                            $metaDataJson = isset($eventCodeCounts) ? json_encode($eventCodeCounts) : '{}';
+                            
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type, meta_data) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type, '".$con->real_escape_string($metaDataJson)."' AS meta_data FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." ) AS temp2 ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         } else if ($type < 28 && $type != 20) {
