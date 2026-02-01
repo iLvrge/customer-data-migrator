@@ -2393,7 +2393,6 @@ if(count($variables) == 3) {
                                 doc.grant_doc_num,
                                 DATE_FORMAT(mf.event_date, '%Y-%m-%d') AS payment_date,
                                 mf.event_code,
-                                COUNT(*) AS event_count,
                                 COALESCE(purchase.exec_dt, '0000-00-00') AS purchase_date,
                                 COALESCE(sale.exec_dt, '0000-00-00') AS sale_date
                             FROM db_patent_maintainence_fee.event_maintainence_fees AS mf
@@ -2462,11 +2461,11 @@ if(count($variables) == 3) {
                             // Batch insert for better performance
                             $insertValues = array();
                             while($row = $resultUnderpaid->fetch_object()) {
-                                // Count event codes
+                                // Count event codes (each row = 1 occurrence)
                                 if(!isset($eventCodeCounts[$row->event_code])) {
                                     $eventCodeCounts[$row->event_code] = 0;
                                 }
-                                $eventCodeCounts[$row->event_code] += $row->event_count;
+                                $eventCodeCounts[$row->event_code]++;
                                 
                                 $insertValues[] = "(
                                     ".$companyID.", 
