@@ -8,13 +8,7 @@ error_reporting(E_WARNING);
 error_reporting(E_ALL);
  
 
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$password = getenv('DB_PASSWORD');
-$dbUSPTO = getenv('DB_USPTO_DB');
-$dbBusiness = getenv('DB_BUSINESS');
-$dbApplication = getenv('DB_APPLICATION_DB');
-$con = new mysqli($host, $user, $password, $dbUSPTO);
+require_once '/var/www/html/trash/connection.php';
 
 
 $variables = $argv;
