@@ -3,14 +3,8 @@
  ini_set('max_execution_time', '0');
 /*error_reporting(E_ALL);
 ini_set('display_errors', 1);*/
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$password = getenv('DB_PASSWORD');
-$dbUSPTO = getenv('DB_USPTO_DB');
-$dbBusiness = getenv('DB_BUSINESS');
-//$dbApplication = getenv('DB_APPLICATION_DB');
-$dbApplication = 'db_new_application';
-$con = new mysqli($host, $user, $password, $dbUSPTO);
+
+require_once '/var/www/html/trash/connection.php';
 
 $variables = $argv;
 print_r($variables);
