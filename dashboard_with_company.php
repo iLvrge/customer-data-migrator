@@ -2450,9 +2450,29 @@ if(count($variables) == 3) {
                         echo "RESULT ROWS: ".($resultUnderpaid ? $resultUnderpaid->num_rows : 'NULL')."<br/>";
                         
                         if($resultUnderpaid && $resultUnderpaid->num_rows > 0) {
-                            $underpaidCount = count($calculatedAssetsForUnPaidDue);
+                            //$underpaidCount = count($calculatedAssetsForUnPaidDue);
+
+                            // Calculate Total for Gauge using ALL event codes (Small, Large, Micro)
+                            $totalEventCodes = [
+                                'M1551', 'M2551', 'M3551', 'M1552', 'M2552', 'M3552', 'M1553', 'M2553', 'M3553', 'M1554', 'M2554', 'M3554', 'M1555', 'M2555', 'M3555', 'M1556', 'M2556', 'M3556', 'M1558', 'M2558', 'M3558'
+                            ];
+                            $totalPaymentCodes = "'" . implode("','", $totalEventCodes) . "'";
+
+                            $queryTotalEvents = "SELECT COUNT(*) as total_events 
+                                FROM db_patent_maintainence_fee.event_maintainence_fees AS mf
+                                INNER JOIN db_uspto.documentid AS doc ON doc.appno_doc_num = mf.appno_doc_num
+                                WHERE CONVERT(mf.appno_doc_num USING latin1) COLLATE latin1_swedish_ci IN (".$inList.")
+                                AND mf.event_code IN (".$totalPaymentCodes.")
+                                AND mf.event_date IS NOT NULL";
                             
-                            // Batch insert for better performance
+                            $resultTotalEvents = $con->query($queryTotalEvents);
+                            $totalPaymentCount = 0;
+                            if($resultTotalEvents && $row = $resultTotalEvents->fetch_object()) {
+                                $totalPaymentCount = $row->total_events;
+                            }
+                            
+                            // Initialize event code counts array (reset here just in case, though strictly not needed if initialized above)
+                            // $eventCodeCounts is already initialized to [] at line 2384, but we'll respect the flow.
                             $insertValues = array();
                             while($row = $resultUnderpaid->fetch_object()) {
                                 // Count event codes (each row = 1 occurrence)
@@ -2467,7 +2487,7 @@ if(count($variables) == 3) {
                                     '".$con->real_escape_string($row->grant_doc_num)."',
                                     ".$row->appno_doc_num.", 
                                     '".$con->real_escape_string($row->event_code)."',
-                                    ".$underpaidCount."
+                                    ".$totalPaymentCount."
                                 )";
                             }
                             
@@ -2584,8 +2604,8 @@ if(count($variables) == 3) {
                         } else if ($type == 27) {
                             // Use the event code counts collected during the insert loop
                             $metaDataJson = isset($eventCodeCounts) ? json_encode($eventCodeCounts) : '{}';
-                            
-                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type, other) SELECT SUM(number + other_number) AS num, 0, total,  representative_id, assignor_id, type, '".$con->real_escape_string($metaDataJson)."' AS other FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." ) AS temp2 ) AS temp";
+
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type, other) SELECT SUM(number + other_number) AS num, 0, ".$totalGaugeCount.",  representative_id, assignor_id, type, '".$con->real_escape_string($metaDataJson)."' AS other FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." ) AS temp2 ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         } else if ($type < 28 && $type != 20) {
