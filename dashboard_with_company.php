@@ -2473,13 +2473,22 @@ if(count($variables) == 3) {
                             
                             // Initialize event code counts array (reset here just in case, though strictly not needed if initialized above)
                             // $eventCodeCounts is already initialized to [] at line 2384, but we'll respect the flow.
+                            $tenYearsAgo = date('Y-m-d', strtotime('-10 years'));
                             $insertValues = array();
                             while($row = $resultUnderpaid->fetch_object()) {
                                 // Count event codes (each row = 1 occurrence)
                                 if(!isset($eventCodeCounts[$row->event_code])) {
-                                    $eventCodeCounts[$row->event_code] = 0;
+                                    $eventCodeCounts[$row->event_code] = [
+                                        'count' => 0,
+                                        'last_10_years' => 0
+                                    ];
                                 }
-                                $eventCodeCounts[$row->event_code]++;
+                                $eventCodeCounts[$row->event_code]['count']++;
+
+                                // Check if payment_date is within the last 10 years
+                                if(!empty($row->payment_date) && $row->payment_date >= $tenYearsAgo) {
+                                    $eventCodeCounts[$row->event_code]['last_10_years']++;
+                                }
                                 
                                 $insertValues[] = "(
                                     ".$companyID.", 
