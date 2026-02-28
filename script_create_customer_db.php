@@ -6,7 +6,11 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 
 require_once '/var/www/html/trash/connection.php';
-$con->query('SET GLOBAL range_optimizer_max_mem_size=0');
+try {
+	$con->query('SET GLOBAL range_optimizer_max_mem_size=0');
+} catch (Throwable $e) {
+	error_log("Note: Could not set global range_optimizer_max_mem_size: " . $e->getMessage());
+}
 
 
 $con->select_db($dbBusiness);
