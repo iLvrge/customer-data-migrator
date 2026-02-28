@@ -2,11 +2,13 @@
 
 ini_set('max_execution_time', '0');
 
-$dbBusiness = getenv('DB_BUSINESS');
-$password = getenv('DB_RT_PWD');
-$con = new mysqli("localhost","root",$password ,$dbBusiness);
-echo 'A'.getenv('DB_BUSINESS').'B<br/>';
-echo 'A'.getenv('DB_RT_PWD').'B<br/>';
+
+
+require_once '/var/www/html/trash/connection.php';
+$con->query('SET GLOBAL range_optimizer_max_mem_size=0');
+
+
+$con->select_db($dbBusiness);
 $variables = $argv;
 
 if(count($variables) == 2) {
@@ -15,7 +17,7 @@ if(count($variables) == 2) {
 	$organisationID = $variables[1];
 	$flag = false;
 	if((int)$organisationID > 0) {
-		$queryOrganisation = "SELECT organisation_id, name, org_key, org_pass, org_host, org_db, org_usr FROM `db_business`.`organisation` WHERE organisation_id = ".(int)$organisationID;
+		$queryOrganisation = "SELECT organisation_id, name, org_key, org_pass, org_host, org_db, org_usr FROM `{$dbBusiness}`.`organisation` WHERE organisation_id = ".(int)$organisationID;
 		
 		echo $queryOrganisation."<br/>";
 		$resultOrg = $con->query($queryOrganisation);
@@ -46,7 +48,7 @@ if(count($variables) == 2) {
 				$queryCheck = $con->query("SHOW DATABASES LIKE '".$org_db."'");
 				$flag = true;
 				if($queryCheck && $queryCheck->num_rows > 0) {
-					$queryUpdate = "UPDATE `db_business`.`organisation` SET org_key='".$org_key."', org_pass='".$org_pass."', org_host='".$org_host."', org_db='".$org_db."', org_usr = '".$org_usr."' WHERE organisation_id = ".$orgData->organisation_id;
+					$queryUpdate = "UPDATE `{$dbBusiness}`.`organisation` SET org_key='".$org_key."', org_pass='".$org_pass."', org_host='".$org_host."', org_db='".$org_db."', org_usr = '".$org_usr."' WHERE organisation_id = ".$orgData->organisation_id;
 					echo $queryUpdate."<br/>";
 					$con->query($queryUpdate);
 				}

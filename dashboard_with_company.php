@@ -2508,7 +2508,7 @@ if(count($variables) == 3) {
                                     $con->query($queryInsertUnderpaid);
                                 }
                             
-                            echo "UNDERPAID ASSETS FOUND: ".$underpaidCount."<br/>";
+                            echo "UNDERPAID ASSETS FOUND: ".$totalPaymentCount."<br/>";
                         } else {
                             echo "UNDERPAID ASSETS NOT FOUND: 0<br/>";
                         }
