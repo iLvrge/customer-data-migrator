@@ -1,6 +1,7 @@
 <?php 
 
 ini_set('max_execution_time', '0');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 
 
@@ -29,7 +30,7 @@ if(count($variables) == 2) {
 				echo "<pre>";
 				print_r($orgData);
 				if($orgData->org_usr == "" || $orgData->org_usr == null ) {
-					echo "Creating Company database<br/>";
+					echo "Database logic starting...<br/>";
 					$org_db = 'db_'.$organisationID.uniqid(); 
 					$org_usr = uniqid();		
 					$org_pass = strtoupper(chr(rand(65,90))).'!'.uniqid();	
@@ -41,9 +42,13 @@ if(count($variables) == 2) {
 					echo "GRANT ALL PRIVILEGES ON ".$org_db.". * TO '".$org_db."'@'localhost'<br/>";
 					*/
 					$con->query("CREATE DATABASE ".$org_db);
+					echo "Database created: ".$org_db."<br/>";
 					$con->query("CREATE USER '".$org_usr."'@'%' IDENTIFIED BY '".$org_pass."'");
+					echo "User created: ".$org_usr."<br/>";
 					$con->query("GRANT ALL PRIVILEGES ON ".$org_db.". * TO '".$org_usr."'@'%'");
+					echo "Privileges granted.<br/>";
 					$con->query("FLUSH PRIVILEGES");
+					echo "Privileges flushed.<br/>";
 					
 					//echo "SHOW DATABASES LIKE '".$org_db."'<br/>";
 					$queryCheck = $con->query("SHOW DATABASES LIKE '".$org_db."'");
@@ -52,10 +57,11 @@ if(count($variables) == 2) {
 						$queryUpdate = "UPDATE `{$dbBusiness}`.`organisation` SET org_key='".$org_key."', org_pass='".$org_pass."', org_host='".$org_host."', org_db='".$org_db."', org_usr = '".$org_usr."' WHERE organisation_id = ".$orgData->organisation_id;
 						echo $queryUpdate."<br/>";
 						$con->query($queryUpdate);
+						echo "Organisation table updated.<br/>";
 					}
 					
 				} else {
-					echo "Database already created";
+					echo "Database already created for this organisation.<br/>";
 					$org_db = $orgData->org_db; 
 					$org_usr = $orgData->org_usr;		
 					$org_pass = $orgData->org_pass;
@@ -64,9 +70,11 @@ if(count($variables) == 2) {
 					//echo "CREATED DATABASE<br/>";	
 				} 
 				/*$orgConnect = new mysqli($org_host, $org_usr, $org_pass, $org_db);*/
+				echo "Switching to database: ".$org_db."<br/>";
 				$con->query("USE ".$org_db);
 				$con->query("SET SQL_MODE='ALLOW_INVALID_DATES'");
 				$con->query("SET FOREIGN_KEY_CHECKS = 0");
+				echo "Creating tables...<br/>";
 				$con->query("CREATE TABLE IF NOT EXISTS `subject_type` (
 				`subject_type_id` int(11) NOT NULL AUTO_INCREMENT,
 				`subject_name` varchar(45) DEFAULT NULL,
