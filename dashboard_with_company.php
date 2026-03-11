@@ -2523,56 +2523,49 @@ if(count($variables) == 3) {
                     $type36CounterJson = json_encode(array('ccounter' => array('patent' => 0, 'application' => 0)));
 
                     foreach(array(30, 33, 36) as $counterType) {
-                        $applicationListSubQuery = "SELECT application FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$counterType." GROUP BY application";
+                        $queryTypeCCounter = "SELECT
+                            COUNT(IF(counterData.has_grant = 1, counterData.appno_doc_num, NULL)) AS patent,
+                            COUNT(IF(counterData.has_grant = 0, counterData.appno_doc_num, NULL)) AS application
+                        FROM (
+                            SELECT sourceData.appno_doc_num,
+                                MIN(sourceData.appno_date) AS filing_date,
+                                MAX(sourceData.has_grant) AS has_grant
+                            FROM (
+                                SELECT d.appno_doc_num, d.appno_date, IF(d.grant_doc_num IS NULL OR d.grant_doc_num = '', 0, 1) AS has_grant
+                                FROM ".$dbUSPTO.".documentid AS d
+                                INNER JOIN ".$dbApplication.".dashboard_items AS di 
+                                ON di.application COLLATE utf8mb4_general_ci = d.appno_doc_num COLLATE utf8mb4_general_ci
+                                WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
 
-                        $assets = array();
-                        $resultAssets = $con->query($applicationListSubQuery);
-                        if($resultAssets && $resultAssets->num_rows > 0) {
-                            while($rowAsset = $resultAssets->fetch_object()) {
-                                array_push($assets, '"'.$rowAsset->application.'"');
-                            }
-                        }
+                                UNION ALL
+
+                                SELECT ag.appno_doc_num, ag.appno_date, IF(ag.grant_doc_num IS NULL OR ag.grant_doc_num = '', 0, 1) AS has_grant
+                                FROM db_patent_application_bibliographic.application_grant AS ag
+                                INNER JOIN ".$dbApplication.".dashboard_items AS di 
+                                ON di.application COLLATE utf8mb4_general_ci = ag.appno_doc_num COLLATE utf8mb4_general_ci
+                                WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
+
+                                UNION ALL
+
+                                SELECT ap.appno_doc_num, ap.appno_date, 0 AS has_grant
+                                FROM db_patent_grant_bibliographic.application_publication AS ap
+                                INNER JOIN ".$dbApplication.".dashboard_items AS di 
+                                ON di.application COLLATE utf8mb4_general_ci = ap.appno_doc_num COLLATE utf8mb4_general_ci
+                                WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
+                            ) AS sourceData
+                            WHERE sourceData.appno_date REGEXP '^[0-9]{4}'
+AND CAST(LEFT(sourceData.appno_date,4) AS UNSIGNED) BETWEEN ".$dashboardCounterFromYear." AND ".$dashboardCounterCurrentYear." 
+                            GROUP BY sourceData.appno_doc_num
+                        ) AS counterData";
+
+                        echo "CounterType: ".$counterType."<br/>";
 
                         $counterByWindow = array('patent' => 0, 'application' => 0);
-
-                        if (count($assets) > 0) {
-                            $assetsImploded = implode(",", $assets);
-                            $queryTypeCCounter = "SELECT
-                                COUNT(IF(counterData.has_grant = 1, counterData.appno_doc_num, NULL)) AS patent,
-                                COUNT(IF(counterData.has_grant = 0, counterData.appno_doc_num, NULL)) AS application
-                            FROM (
-                                SELECT sourceData.appno_doc_num,
-                                    MIN(sourceData.appno_date) AS filing_date,
-                                    MAX(sourceData.has_grant) AS has_grant
-                                FROM (
-                                    SELECT d.appno_doc_num, d.appno_date, IF(d.grant_doc_num IS NULL OR d.grant_doc_num = '', 0, 1) AS has_grant
-                                    FROM ".$dbUSPTO.".documentid AS d
-                                    WHERE d.appno_doc_num IN (".$assetsImploded.")
-                                    UNION ALL
-                                    SELECT ag.appno_doc_num, ag.appno_date, IF(ag.grant_doc_num IS NULL OR ag.grant_doc_num = '', 0, 1) AS has_grant
-                                    FROM db_patent_application_bibliographic.application_grant AS ag
-                                    WHERE ag.appno_doc_num IN (".$assetsImploded.")
-                                    UNION ALL
-                                    SELECT ap.appno_doc_num, ap.appno_date, 0 AS has_grant
-                                    FROM db_patent_grant_bibliographic.application_publication AS ap
-                                    WHERE ap.appno_doc_num IN (".$assetsImploded.")
-                                ) AS sourceData
-                                WHERE sourceData.appno_date IS NOT NULL
-                                AND sourceData.appno_date <> ''
-                                AND DATE_FORMAT(NULLIF(sourceData.appno_date,''), '%Y') > ".$dashboardCounterFromYear."
-                                AND DATE_FORMAT(NULLIF(sourceData.appno_date,''), '%Y') <= ".$dashboardCounterCurrentYear."
-                                GROUP BY sourceData.appno_doc_num
-                            ) AS counterData";
-
-                            echo "CounterType: ".$applicationListSubQuery."<br/>";
-
-
-                            $resultTypeCCounter = $con->query($queryTypeCCounter);
-                            if($resultTypeCCounter && $resultTypeCCounter->num_rows > 0) {
-                                $rowTypeCCounter = $resultTypeCCounter->fetch_object();
-                                $counterByWindow['patent'] = (int)$rowTypeCCounter->patent;
-                                $counterByWindow['application'] = (int)$rowTypeCCounter->application;
-                            }
+                        $resultTypeCCounter = $con->query($queryTypeCCounter);
+                        if($resultTypeCCounter && $resultTypeCCounter->num_rows > 0) {
+                            $rowTypeCCounter = $resultTypeCCounter->fetch_object();
+                            $counterByWindow['patent'] = (int)$rowTypeCCounter->patent;
+                            $counterByWindow['application'] = (int)$rowTypeCCounter->application;
                         }
 
                         $counterMetaJson = json_encode(array('ccounter' => $counterByWindow));
