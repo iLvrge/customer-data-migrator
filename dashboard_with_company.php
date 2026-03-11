@@ -2515,6 +2515,62 @@ if(count($variables) == 3) {
                     }
 
 
+                    $dashboardCounterCurrentYear = (int)date('Y');
+                    $dashboardCounterFromYear = $dashboardCounterCurrentYear - 10;
+                    $type30CounterJson = json_encode(array('ccounter' => array('patent' => 0, 'application' => 0)));
+                    $type33CounterJson = json_encode(array('ccounter' => array('patent' => 0, 'application' => 0)));
+                    $type36CounterJson = json_encode(array('ccounter' => array('patent' => 0, 'application' => 0)));
+
+                    foreach(array(30, 33, 36) as $counterType) {
+                        $applicationListSubQuery = "SELECT application FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$counterType." GROUP BY application";
+                        $queryTypeCCounter = "SELECT
+                            COUNT(IF(counterData.has_grant = 1, counterData.appno_doc_num, NULL)) AS patent,
+                            COUNT(IF(counterData.has_grant = 0, counterData.appno_doc_num, NULL)) AS application
+                        FROM (
+                            SELECT sourceData.appno_doc_num,
+                                MIN(sourceData.appno_date) AS filing_date,
+                                MAX(sourceData.has_grant) AS has_grant
+                            FROM (
+                                SELECT d.appno_doc_num, d.appno_date, IF(d.grant_doc_num IS NULL OR d.grant_doc_num = '', 0, 1) AS has_grant
+                                FROM ".$dbUSPTO.".documentid AS d
+                                WHERE d.appno_doc_num IN (".$applicationListSubQuery.")
+                                UNION ALL
+                                SELECT ag.appno_doc_num, ag.appno_date, IF(ag.grant_doc_num IS NULL OR ag.grant_doc_num = '', 0, 1) AS has_grant
+                                FROM db_patent_application_bibliographic.application_grant AS ag
+                                WHERE ag.appno_doc_num IN (".$applicationListSubQuery.")
+                                UNION ALL
+                                SELECT ap.appno_doc_num, ap.appno_date, 0 AS has_grant
+                                FROM db_patent_grant_bibliographic.application_publication AS ap
+                                WHERE ap.appno_doc_num IN (".$applicationListSubQuery.")
+                            ) AS sourceData
+                            WHERE sourceData.appno_date IS NOT NULL
+                            AND sourceData.appno_date <> ''
+                            AND date_format(sourceData.appno_date, '%Y') > ".$dashboardCounterFromYear."
+                            AND date_format(sourceData.appno_date, '%Y') <= ".$dashboardCounterCurrentYear."
+                            GROUP BY sourceData.appno_doc_num
+                        ) AS counterData";
+
+                        $counterByWindow = array('patent' => 0, 'application' => 0);
+                        $resultTypeCCounter = $con->query($queryTypeCCounter);
+                        if($resultTypeCCounter && $resultTypeCCounter->num_rows > 0) {
+                            $rowTypeCCounter = $resultTypeCCounter->fetch_object();
+                            $counterByWindow['patent'] = (int)$rowTypeCCounter->patent;
+                            $counterByWindow['application'] = (int)$rowTypeCCounter->application;
+                        }
+
+                        $counterMetaJson = json_encode(array('ccounter' => $counterByWindow));
+                        if($counterType == 30) {
+                            $type30CounterJson = $counterMetaJson;
+                        } else if($counterType == 33) {
+                            $type33CounterJson = $counterMetaJson;
+                        } else if($counterType == 36) {
+                            $type36CounterJson = $counterMetaJson;
+                        }
+
+                        $queryUpdateMetaData = "UPDATE ".$dbApplication.".dashboard_items SET meta_data = '".$con->real_escape_string($counterMetaJson)."' WHERE representative_id = ".$companyID." AND type = ".$counterType;
+                        $con->query($queryUpdateMetaData);
+                    }
+
                     foreach($allTypes as $type) {
                         if($type == 35) {   
                             /**
@@ -2615,6 +2671,17 @@ if(count($variables) == 3) {
                             $metaDataJson = isset($eventCodeCounts) ? json_encode($eventCodeCounts) : '{}';
 
                             $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type, other) SELECT SUM(number + other_number) AS num, 0, ".$totalGaugeCount.",  representative_id, assignor_id, type, '".$con->real_escape_string($metaDataJson)."' AS other FROM (SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0 AS assignor_id, ".$type." AS type FROM ( SELECT * FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." ) AS temp2 ) AS temp";
+                            
+                            $con->query($queryInsertCounter);  
+                        } else if(in_array($type, array(30, 33, 36), true)) {
+                            $counterMetaJson = $type30CounterJson;
+                            if($type == 33) {
+                                $counterMetaJson = $type33CounterJson;
+                            } else if($type == 36) {
+                                $counterMetaJson = $type36CounterJson;
+                            }
+
+                            $queryInsertCounter = "INSERT IGNORE INTO ".$dbApplication.".dashboard_items_count (number, other_number,  total, representative_id, assignor_id, type, other) SELECT COUNT(IF(patent <> '', patent, null)) AS number, COUNT(IF(patent IS NULL OR patent = '', application, null)) AS other_number,  total, ".$companyID." AS representative_id, 0, ".$type.", '".$con->real_escape_string($counterMetaJson)."' FROM ( SELECT application, patent, total FROM ".$dbApplication.".dashboard_items WHERE representative_id = ".$companyID." AND type = ".$type." GROUP BY application ) AS temp";
                             
                             $con->query($queryInsertCounter);  
                         } else if ($type < 28 && $type != 20) {
