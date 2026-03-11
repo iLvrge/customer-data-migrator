@@ -2533,16 +2533,18 @@ if(count($variables) == 3) {
                             FROM (
                                 SELECT d.appno_doc_num, d.appno_date, IF(d.grant_doc_num IS NULL OR d.grant_doc_num = '', 0, 1) AS has_grant
                                 FROM ".$dbUSPTO.".documentid AS d
-                                INNER JOIN ".$dbApplication.".dashboard_items AS di 
-                                ON di.application COLLATE utf8mb4_general_ci = d.appno_doc_num COLLATE utf8mb4_general_ci
-                                WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
-
+                                INNER JOIN (
+                                    SELECT application
+                                    FROM ".$dbApplication.".dashboard_items
+                                    WHERE representative_id = ".$companyID." AND type = ".$counterType.") di
+                                ON CONVERT(di.application USING latin1) = d.appno_doc_num
+                                
                                 UNION ALL
 
                                 SELECT ag.appno_doc_num, ag.appno_date, IF(ag.grant_doc_num IS NULL OR ag.grant_doc_num = '', 0, 1) AS has_grant
                                 FROM db_patent_application_bibliographic.application_grant AS ag
                                 INNER JOIN ".$dbApplication.".dashboard_items AS di 
-                                ON di.application COLLATE utf8mb4_general_ci = ag.appno_doc_num COLLATE utf8mb4_general_ci
+                                ON di.application = ag.appno_doc_num
                                 WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
 
                                 UNION ALL
@@ -2550,7 +2552,7 @@ if(count($variables) == 3) {
                                 SELECT ap.appno_doc_num, ap.appno_date, 0 AS has_grant
                                 FROM db_patent_grant_bibliographic.application_publication AS ap
                                 INNER JOIN ".$dbApplication.".dashboard_items AS di 
-                                ON di.application COLLATE utf8mb4_general_ci = ap.appno_doc_num COLLATE utf8mb4_general_ci
+                                ON di.application = ap.appno_doc_num
                                 WHERE di.representative_id = ".$companyID." AND di.type = ".$counterType."
                             ) AS sourceData
                             WHERE sourceData.appno_date REGEXP '^[0-9]{4}'
