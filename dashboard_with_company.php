@@ -2550,7 +2550,7 @@ if(count($variables) == 3) {
                             GROUP BY sourceData.appno_doc_num
                         ) AS counterData";
 
-                        /* echo "CounterType: ".$applicationListSubQuery."<br/>"; */
+                        echo "CounterType: ".$applicationListSubQuery."<br/>";
 
 
                         $counterByWindow = array('patent' => 0, 'application' => 0);
