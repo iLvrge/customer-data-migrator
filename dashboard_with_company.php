@@ -2568,6 +2568,8 @@ if(count($variables) == 3) {
                             $type36CounterJson = $counterMetaJson;
                         }
 
+                        echo "COUNTERS QUERY: ".$applicationListSubQuery."<br>";
+
                         $queryUpdateMetaData = "UPDATE ".$dbApplication.".dashboard_items SET meta_data = '".$con->real_escape_string($counterMetaJson)."' WHERE representative_id = ".$companyID." AND type = ".$counterType;
                         $con->query($queryUpdateMetaData);
                     }
